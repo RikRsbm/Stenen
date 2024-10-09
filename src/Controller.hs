@@ -31,7 +31,7 @@ import Control.Monad (when)
 
 
 step :: Float -> GameState -> IO GameState
-step secs gstate 
+step _ gstate 
     | status gstate == FirstStep = readHighscore gstate
     | status gstate == GameOver || status gstate == Paused || status gstate == PreStart = return gstate 
     | any (pColliding (player gstate)) (stenen gstate) = finishGame gstate            
