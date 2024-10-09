@@ -57,8 +57,7 @@ update gstate secs
                     player = pCheckBounds (glide (foldr checkMovementKeyPressed (player gstate) movementKeys))
                   , stenen = addMaybe (randomSteen r gstate) (map glide (filter checkWithinBounds newStenen))
                   , bullets = map glide (filter checkWithinBounds (bullets gstate))
-                  , score = score gstate + steenScoreMultiplier * (l - length newStenen)
-                  , elapsedTime = elapsedTime gstate + secs  
+                  , score = score gstate + steenScoreMultiplier * (l - length newStenen) 
                   }
   where 
     checkBulletSteenCollisions = filter (\steen -> not (any (bColliding steen) (bullets gstate))) 
