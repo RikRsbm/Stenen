@@ -69,9 +69,6 @@ data Bullet = Bullet {
               , bVelocity :: Vector -- velocity of bullet
               }
 
-
-data Direction = Left | Right deriving Eq
-
 class IsRound a where
     radius :: a -> Float
 
@@ -87,7 +84,7 @@ class Movable a where -- things on screen that can move
     location :: a -> Point
     velocity :: a -> Vector
     glide :: a -> a -- how they should glide through space every step
-    steer :: a -> Direction -> Float -> a -- steers them by certain number of degrees
+    steer :: a -> Float -> a -- steers them by certain number of degrees
 
 instance Movable Player where
     location :: Player -> Point
@@ -103,11 +100,8 @@ instance Movable Player where
         newVec | magV vec < autoDecelPlayer = (0, 0) -- if player (almost) stands  still
                | otherwise                  = vec `subVec` mulSV autoDecelPlayer (normalizeV vec) -- decelleration
 
-    steer :: Player -> Direction -> Float -> Player
-    steer p d angle = p { lookDirection = rotateV angle' (lookDirection p) } -- steer 'angle' degrees in direction 'd'
-      where 
-        angle' | d == Model.Left = angle
-               | otherwise = -angle
+    steer :: Player -> Float -> Player
+    steer p angle = p { lookDirection = rotateV angle (lookDirection p) } -- steer 'angle' degrees in direction 'd'
 
 instance Movable Steen where
     location :: Steen -> Point
@@ -120,11 +114,8 @@ instance Movable Steen where
     glide s@(Steen { sLocation = (x, y), sVelocity = (dx, dy) }) 
         = s { sLocation = (x + dx, y + dy) }
 
-    steer :: Steen -> Direction -> Float -> Steen -- not used yet
-    steer s d angle = s { sVelocity = rotateV angle' (velocity s) } -- steer 'angle' degrees in direction 'd'
-      where 
-        angle' | d == Model.Left = angle
-               | otherwise = -angle
+    steer :: Steen -> Float -> Steen -- not used yet
+    steer s angle = s { sVelocity = rotateV angle (velocity s) } -- steer 'angle' degrees in direction 'd'
 
 instance Movable Bullet where
     location :: Bullet -> Point
@@ -137,11 +128,8 @@ instance Movable Bullet where
     glide b@(Bullet { bLocation = (x, y), bVelocity = (dx, dy) }) 
         = b { bLocation = (x + dx, y + dy) }
 
-    steer :: Bullet -> Direction -> Float -> Bullet -- not used yet
-    steer b d angle = b { bVelocity = rotateV angle' (bVelocity b) } -- steer 'angle' degrees in direction 'd'
-      where 
-        angle' | d == Model.Left = angle
-               | otherwise = -angle
+    steer :: Bullet -> Float -> Bullet -- not used yet
+    steer b angle = b { bVelocity = rotateV angle (velocity b) } -- steer 'angle' degrees in direction 'd'
 
 
 

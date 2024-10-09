@@ -3,7 +3,6 @@ module Functionality where
 import Model
     ( Movable(steer, location),
       IsRound(..),
-      Direction(Right, Left),
       Bullet(Bullet),
       Steen(Steen),
       Player(..),
@@ -101,6 +100,6 @@ randomSteen seed gstate
 
 checkMovementKeyPressed :: (Char, Bool) -> Player -> Player
 checkMovementKeyPressed ('w', True) p = boost p
-checkMovementKeyPressed ('a', True) p = steer p Model.Left inputSteerPlayer 
-checkMovementKeyPressed ('d', True) p = steer p Model.Right inputSteerPlayer 
+checkMovementKeyPressed ('a', True) p = steer p inputSteerPlayer 
+checkMovementKeyPressed ('d', True) p = steer p (- inputSteerPlayer)
 checkMovementKeyPressed _ gstate = gstate
