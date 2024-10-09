@@ -10,9 +10,9 @@ import Graphics.Gloss.Data.Vector (magV, mulSV, rotateV, normalizeV)
 import General ( subVec )
 
 
---
---dfajsgjdfgasgfhessdfa
---
+
+--hoi
+
 
 data GameState = GameState {
                    player :: Player
