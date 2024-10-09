@@ -76,7 +76,7 @@ checkWithinBounds m = x < width  && x > - width &&
 
 randomSteen :: Int -> GameState -> Maybe Steen
 randomSteen seed gstate 
-    | steenOdds == 0 = Just (Steen (x, y) (dx, dy) r 1)
+    | steenOdds == 0 = Just (Steen (x, y) (dx, dy) r)
     | otherwise      = Nothing
   where
     gen = mkStdGen seed

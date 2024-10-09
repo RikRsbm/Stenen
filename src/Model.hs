@@ -13,16 +13,15 @@ import General ( subVec )
 
 
 data GameState = GameState {
-                   player :: Player
-                 , stenen :: [Steen]
-                 , bullets :: [Bullet]
-                 , elapsedTime :: Float
-                 , wPressed :: Bool
-                 , aPressed :: Bool     -- zorgen dat dit werkt. in step, maak steeds een lijst [("W", wPressed), etc] en dan de functie als input steeds ("W", True geven)
-                 , dPressed :: Bool
-                 , status :: Status
-                 , score :: Int
-                 , highscore :: Int
+                   player :: Player 
+                 , stenen :: [Steen] -- list of onscreen asteroids
+                 , bullets :: [Bullet] -- list of onscreen bullets
+                 , wPressed :: Bool -- is 'w' pressed
+                 , aPressed :: Bool -- is 'a' pressed?
+                 , dPressed :: Bool -- is 'd' pressed?
+                 , status :: Status -- status of game
+                 , score :: Int -- current score
+                 , highscore :: Int -- all time highscore (gets loaded in at start of game)
                  }
 
 initialState :: GameState
@@ -32,7 +31,6 @@ initialState = GameState (Player (0, 0)
                          ) 
                          []
                          []
-                         0 
                          False
                          False
                          False
@@ -43,25 +41,24 @@ initialState = GameState (Player (0, 0)
 
 
 
-data Status = FirstStep
-            | PreStart
-            | Running
-            | Paused
-            | GameOver
+data Status = FirstStep -- the first step of the game, it then reads the highscore from highscore.txt
+            | PreStart -- between FirstStep and the first 'w' press
+            | Running -- while the game is running
+            | Paused -- while the game is paused
+            | GameOver -- when the game is over
             deriving Eq
 
 
 data Player = Player { 
                 pLocation :: Point -- location of player
               , pVelocity :: Vector -- velocity of player
-              , lookDirection :: Vector -- direction that player is looking in, it's a vector of magnitude inputAccelPlayer
+              , lookDirection :: Vector -- direction that player is looking in, it's a vector of constant magnitude
               } 
 
 data Steen = Steen { 
-               sLocation :: Point -- location of stone
-             , sVelocity :: Vector -- velocity of stone
-             , sRadius :: Float -- radius of stone
-             , level :: Int -- level of stone 
+               sLocation :: Point -- location of asteroid
+             , sVelocity :: Vector -- velocity of asteroid
+             , sRadius :: Float -- radius of asteroid
              } 
 
 data Bullet = Bullet {
