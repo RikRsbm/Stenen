@@ -11,8 +11,6 @@ import General ( subVec )
 
 
 
---hoi
-
 
 data GameState = GameState {
                    player :: Player
