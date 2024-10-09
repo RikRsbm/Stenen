@@ -33,7 +33,7 @@ step secs gstate
     | status gstate == FirstStep = readHighscore gstate
     | status gstate == GameOver || status gstate == Paused || status gstate == PreStart = return gstate 
     | any (pColliding (player gstate)) (stenen gstate) = finishGame gstate            
-    | otherwise = update gstate secs
+    | otherwise = update gstate
 
 readHighscore :: GameState -> IO GameState
 readHighscore gstate 
@@ -47,8 +47,8 @@ finishGame gstate
            $ writeFile highscorePath (show (score gstate))
          return $ gstate { status = GameOver}
 
-update :: GameState -> Float -> IO GameState
-update gstate secs 
+update :: GameState -> IO GameState
+update gstate 
     = do r <- randomIO
          let l = length (stenen gstate)
          let newStenen = checkBulletSteenCollisions (stenen gstate)
