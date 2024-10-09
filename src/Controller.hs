@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use <$>" #-}
 -- | This module defines how the state changes
 --   in response to time and user input
 module Controller where
@@ -18,7 +20,7 @@ import Graphics.Gloss.Interface.IO.Game
       KeyState(Up, Down),
       SpecialKey(KeyEsc, KeyEnter),
       Event(EventKey) )
-import System.Random ( randomIO )
+import System.Random ( randomIO, Random (random) )
 import Text.Read (readMaybe)
 import Data.Maybe (fromMaybe)
 import Control.Monad (when)
@@ -33,7 +35,8 @@ step secs gstate
     | status gstate == FirstStep = readHighscore gstate
     | status gstate == GameOver || status gstate == Paused || status gstate == PreStart = return gstate 
     | any (pColliding (player gstate)) (stenen gstate) = finishGame gstate            
-    | otherwise = update gstate
+    | otherwise = do r <- randomIO
+                     return (update gstate r)
 
 readHighscore :: GameState -> IO GameState
 readHighscore gstate 
@@ -47,20 +50,17 @@ finishGame gstate
            $ writeFile highscorePath (show (score gstate))
          return $ gstate { status = GameOver}
 
-update :: GameState -> IO GameState
-update gstate 
-    = do r <- randomIO
-         let l = length (stenen gstate)
-         let newStenen = checkBulletSteenCollisions (stenen gstate)
-         return $ gstate 
-                  { 
-                    player = pCheckBounds (glide (foldr checkMovementKeyPressed (player gstate) movementKeys))
-                  , stenen = addMaybe (randomSteen r gstate) (map glide (filter checkWithinBounds newStenen))
-                  , bullets = map glide (filter checkWithinBounds (bullets gstate))
-                  , score = score gstate + steenScoreMultiplier * (l - length newStenen) 
-                  }
-  where 
-    checkBulletSteenCollisions = filter (\steen -> not (any (bColliding steen) (bullets gstate))) 
+update :: GameState -> Int -> GameState
+update gstate r
+    =  gstate 
+         { 
+           player = pCheckBounds (glide (foldr checkMovementKeyPressed (player gstate) movementKeys))
+         , stenen = addMaybe (randomSteen r gstate) (map glide (filter checkWithinBounds notShotDownStenen))
+         , bullets = map glide (filter checkWithinBounds (bullets gstate))
+         , score = score gstate + steenScoreMultiplier * (length (stenen gstate) - length notShotDownStenen) 
+         }
+  where  
+    notShotDownStenen = filter (\steen -> not (any (bColliding steen) (bullets gstate))) (stenen gstate)
     movementKeys = [('w', wPressed gstate), ('a', aPressed gstate), ('d', dPressed gstate)] 
     
 
