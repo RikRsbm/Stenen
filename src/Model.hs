@@ -4,11 +4,10 @@
 module Model where
 
 import Constants
-    ( lookDirectionVecMagnitude, bulletRadius, autoDecelPlayer, playerRadius, playerBulletSpeed, alienBulletSpeed, halfHeightFloat, halfWidth, halfWidthFloat, alienRadius, halfHeight, alienSpeed, alienOdds )
-import Graphics.Gloss ( Point, Vector )
-import Graphics.Gloss.Data.Vector (magV, mulSV, rotateV, normalizeV)
-import General ( subVec, addVecToPt, addVec, addMaybe )
-import System.Random (mkStdGen, Random (randomR))
+import Graphics.Gloss
+import Graphics.Gloss.Data.Vector 
+import General 
+import System.Random 
 
 
 

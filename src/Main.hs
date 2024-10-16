@@ -1,9 +1,9 @@
 module Main where
 
-import Controller ( input, step )
-import Constants ( screenWidth, screenHeight )
-import Model ( initialState )
-import View ( view )
+import Controller 
+import Constants 
+import Model 
+import View
 
 
 

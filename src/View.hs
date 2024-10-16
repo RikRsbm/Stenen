@@ -3,38 +3,10 @@
 module View where
 
 import Model
-    ( Movable(location, radius),
-      Bullet,
-      Steen,
-      Player(lookDirection),
-      GameState(player, stenen, bullets, score, highscore, status, aliens, alienBullets), Status (PreStart, Paused, GameOver), Alien )
-import General ( addMaybe )
+import General
 import Constants
-    ( playerRadius,
-      bulletRadius,
-      bigTextScale,
-      smallTextScale,
-      statusY,
-      explanationX,
-      playerBackLineRatio, ufoScale, lightPink )
-import Graphics.Gloss.Data.Vector (rotateV)
+import Graphics.Gloss.Data.Vector 
 import Graphics.Gloss
-    ( blue,
-      green,
-      red,
-      white,
-      circle,
-      color,
-      line,
-      pictures,
-      scale,
-      text,
-      translate,
-      Color,
-      Picture (Blank),
-      Point, loadBMP )
-import Data.IntMap (partitionWithKey)
-
 
 
 

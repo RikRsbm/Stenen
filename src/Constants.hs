@@ -1,5 +1,7 @@
 module Constants where
-import Graphics.Gloss (Color, makeColor)
+import Graphics.Gloss
+
+
 
 lookDirectionVecMagnitude :: Float -- magnitude of lookDirection vector. leave this at 1. 
 lookDirectionVecMagnitude = 1      -- This way we don't have to normalize the vector everytime we use it.

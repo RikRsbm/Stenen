@@ -1,21 +1,10 @@
 module Functionality where
 
 import Model
-    ( Movable(steer, location, velocity, radius),
-      TempObject(..),
-      Bullet(Bullet),
-      Steen(Steen),
-      Player(..),
-      GameState( player, aliens),
-      Alien, CanShoot (shootBullet) )
-import General ( addVec )
+import General 
 import Constants
-    ( inputAccelPlayer,
-      inputSteerPlayer,
-      halfWidthFloat,
-      halfHeightFloat, alienBulletOdds )
-import Graphics.Gloss.Data.Vector (mulSV, magV)
-import System.Random (mkStdGen, Random (randomR))
+import Graphics.Gloss.Data.Vector
+import System.Random 
 
 
 
