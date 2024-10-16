@@ -3,12 +3,11 @@
 module View where
 
 import Model
-    ( Movable(location),
-      IsRound(radius),
+    ( Movable(location, radius),
       Bullet,
       Steen,
       Player(lookDirection),
-      GameState(player, stenen, bullets, score, highscore, status), Status (PreStart, Paused, GameOver) )
+      GameState(player, stenen, bullets, score, highscore, status, aliens, alienBullets), Status (PreStart, Paused, GameOver), Alien )
 import General ( addMaybe )
 import Constants
     ( playerRadius,
@@ -17,7 +16,7 @@ import Constants
       smallTextScale,
       statusY,
       explanationX,
-      playerBackLineRatio )
+      playerBackLineRatio, ufoScale, lightPink )
 import Graphics.Gloss.Data.Vector (rotateV)
 import Graphics.Gloss
     ( blue,
@@ -33,23 +32,27 @@ import Graphics.Gloss
       translate,
       Color,
       Picture (Blank),
-      Point )
+      Point, loadBMP )
+import Data.IntMap (partitionWithKey)
 
 
 
 
 
 view :: GameState -> IO Picture
-view = return . viewPure
+view gstate = do ufo <- loadBMP "Pictures/Ufo.bmp"
+                 return (viewPure gstate ufo)
 
-viewPure :: GameState -> Picture
-viewPure gstate = pictures pics
+viewPure :: GameState -> Picture -> Picture
+viewPure gstate ufo = pictures pics
   where
-    pics = steenPics ++ bulletPics ++ [playerPic, scorePic, highscorePic, statusPic]
+    pics = steenPics ++ alienPics ++ bulletPics ++ alienBulletPics ++ [playerPic, scorePic, highscorePic, statusPic]
 
     playerPic = viewPlayer (player gstate)
     steenPics = map viewSteen (stenen gstate)
+    alienPics = map (viewAlien ufo) (aliens gstate)
     bulletPics = map (viewBullet red) (bullets gstate)
+    alienBulletPics = map (viewBullet lightPink) (alienBullets gstate)
     scorePic = viewScore (score gstate)
     highscorePic = viewHighscore (highscore gstate)
     statusPic = viewStatus (status gstate)
@@ -76,6 +79,10 @@ viewPlayer p = pictures [lineLeft, lineRight, lineBack]
 viewSteen :: Steen -> Picture
 viewSteen s = translate x y (color white (circle (radius s))) 
   where (x, y) = location s
+
+viewAlien :: Picture -> Alien -> Picture
+viewAlien ufo a = translate x y (scale ufoScale ufoScale ufo)
+  where (x, y) = location a
 
 viewBullet :: Color -> Bullet -> Picture
 viewBullet c b = translate x y (color c (circle bulletRadius))

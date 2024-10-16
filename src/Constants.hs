@@ -1,4 +1,5 @@
 module Constants where
+import Graphics.Gloss (Color, makeColor)
 
 lookDirectionVecMagnitude :: Float -- magnitude of lookDirection vector. leave this at 1. 
 lookDirectionVecMagnitude = 1      -- This way we don't have to normalize the vector everytime we use it.
@@ -14,12 +15,12 @@ playerBulletSpeed :: Float -- player bullet gets this speed + speed of player
 playerBulletSpeed = 6
 
 alienBulletSpeed :: Float -- alien bullet gets this speed
-alienBulletSpeed = 6
+alienBulletSpeed = 4
 
 steenScoreMultiplier :: Int
 steenScoreMultiplier = 3
 
--- for editing steen values, edit them in the "randomSteen" function (too much variables to put here)
+-- for editing steen values, edit them in the "perhapsCreateNew" function (too much variables to put here)
 
 autoDecelPlayer :: Float -- amount of automatic decelleration per step
 autoDecelPlayer = 0.04
@@ -65,3 +66,27 @@ explanationX = -450
 
 playerBackLineRatio :: Float 
 playerBackLineRatio = 0.5
+
+alienRadius :: Float
+alienRadius = 35
+
+alienOdds :: Int
+alienOdds = 400
+
+alienBulletOdds :: Int
+alienBulletOdds = 100
+
+lightPink :: Color
+lightPink = makeColor 1.0 0.7 0.8 1.0
+
+ufoScale :: Float
+ufoScale = 2 * alienRadius / ufoBmpSize
+
+ufoBmpSize :: Float
+ufoBmpSize = 70
+
+alienSpeed :: Float
+alienSpeed = 2
+
+alienScoreMultiplier :: Int
+alienScoreMultiplier = 4

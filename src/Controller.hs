@@ -13,13 +13,12 @@ import Model
       dPressed,
       Status (GameOver, PreStart, Running, Paused, FirstStep),
       CanShoot (shootBullet),
-      IsRound (pColliding, checkWithinBounds) )
+      TempObject (pColliding, checkWithinBounds, updateLocations),
+      RandomObject (updateRemoveAndAdd) )
 import Functionality
     ( pCheckBounds,
-      sbColliding,
-      randomSteen,
-      checkMovementKeyPressed )
-import Constants ( steenScoreMultiplier, highscorePath )
+      checkMovementKeyPressed, newBullet )
+import Constants ( steenScoreMultiplier, highscorePath, alienScoreMultiplier )
 import General ( addMaybe )
 import Graphics.Gloss.Interface.IO.Game
     ( Key(SpecialKey, Char),
@@ -41,11 +40,13 @@ step :: Float -> GameState -> IO GameState
 step _ gstate 
     | status gstate == FirstStep = readHighscore gstate
     | status gstate == GameOver || status gstate == Paused || status gstate == PreStart = return gstate 
-    | any (pColliding (player gstate)) (stenen gstate) ||
-      any (pColliding (player gstate)) (alienBullets gstate)  
+    | any (pColliding p) (stenen gstate) ||
+      any (pColliding p) (aliens gstate) ||
+      any (pColliding p) (alienBullets gstate)  
         = finishGame gstate            
     | otherwise = do r <- randomIO
                      return (update gstate r)
+  where p = player gstate
 
 readHighscore :: GameState -> IO GameState
 readHighscore gstate 
@@ -63,16 +64,18 @@ update :: GameState -> Int -> GameState
 update gstate r
     =  gstate 
          { 
-           player = pCheckBounds (glide (foldr checkMovementKeyPressed (player gstate) movementKeys))
-         , stenen = addMaybe (randomSteen r gstate) (map glide (filter checkWithinBounds notShotDownStenen))
-         , bullets = map glide (filter checkWithinBounds (bullets gstate))
-         , aliens = aliens gstate
-         , alienBullets = alienBullets gstate
-         , score = score gstate + steenScoreMultiplier * (length (stenen gstate) - length notShotDownStenen) 
+           player = pCheckBounds (glide (foldr checkMovementKeyPressed (player gstate) keysPressed))
+         , stenen = stenenUpdated
+         , bullets = updateLocations (bullets gstate)
+         , aliens = aliensUpdated
+         , alienBullets = addMaybe (newBullet gstate r) (updateLocations (alienBullets gstate)) 
+         , score = score gstate + steenScoreMultiplier * stenenShot + alienScoreMultiplier * aliensShot 
          }
   where  
-    notShotDownStenen = filter (\steen -> not (any (sbColliding steen) (bullets gstate))) (stenen gstate)
-    movementKeys = [('w', wPressed gstate), ('a', aPressed gstate), ('d', dPressed gstate)] 
+    keysPressed = [('w', wPressed gstate), ('a', aPressed gstate), ('d', dPressed gstate)] 
+
+    (stenenUpdated, stenenShot) = updateRemoveAndAdd gstate r (stenen gstate)
+    (aliensUpdated, aliensShot) = updateRemoveAndAdd gstate r (aliens gstate)
     
 
 
@@ -89,7 +92,8 @@ inputKey k@(EventKey (Char 'w') Down _ _) gstate@(GameState { status = PreStart 
     = inputKey k (gstate { status = Running })
 
 inputKey (EventKey (SpecialKey KeyEnter) Down _ _) gstate@(GameState { status = Running }) 
-    = shootBullet (player gstate) gstate
+    = gstate { bullets = bul : bullets gstate, score = score gstate - 1 }
+  where bul = shootBullet (player gstate) gstate
 
 inputKey (EventKey (SpecialKey KeyEsc) Down _ _) gstate@(GameState { status = Running }) 
     = gstate { status = Paused }

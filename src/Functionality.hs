@@ -1,24 +1,21 @@
 module Functionality where
 
 import Model
-    ( Movable(steer, location, velocity),
-      IsRound(..),
+    ( Movable(steer, location, velocity, radius),
+      TempObject(..),
       Bullet(Bullet),
       Steen(Steen),
       Player(..),
-      GameState( player), 
-      Alien )
+      GameState( player, aliens),
+      Alien, CanShoot (shootBullet) )
 import General ( addVec )
 import Constants
-    ( playerRadius,
-      inputAccelPlayer,
+    ( inputAccelPlayer,
       inputSteerPlayer,
-      halfWidth,
       halfWidthFloat,
-      halfHeight,
-      halfHeightFloat )
-import Graphics.Gloss.Data.Vector (mulSV, normalizeV, magV)
-import System.Random (Random(randomR), mkStdGen)
+      halfHeightFloat, alienBulletOdds )
+import Graphics.Gloss.Data.Vector (mulSV, magV)
+import System.Random (mkStdGen, Random (randomR))
 
 
 
@@ -38,46 +35,21 @@ pCheckBounds p@(Player { pLocation = (x, y), pVelocity = (dx, dy) })
     (y', dy') | y >   height = (  height, 0 )
               | y < - height = (- height, 0 )
               | otherwise    = (  y     , dy)
-    width  = halfWidthFloat - playerRadius
-    height = halfHeightFloat - playerRadius
-
-sbColliding :: Steen -> Bullet -> Bool 
-sbColliding b s  
-    | magV (x - p, y - q) < radius s + radius b = True
-    | otherwise                                 = False
-  where 
-    (x, y) = location b
-    (p, q) = location s
-
-alienShootBullet :: GameState -> Alien -> GameState
-alienShootBullet = undefined
-
-randomSteen :: Int -> GameState -> Maybe Steen
-randomSteen seed gstate 
-    | steenOdds == 0 = Just (Steen (x, y) (dx, dy) r)
-    | otherwise      = Nothing
-  where
-    gen = mkStdGen seed
-    (steenOdds  , gen1) = randomR (0  :: Int            , 100                ) gen 
-    (radius     , gen2) = randomR (15 :: Int            , 40                 ) gen1
-    (randomX    , gen3) = randomR (- halfWidth  - radius, halfWidth  + radius) gen2
-    (randomY    , gen4) = randomR (- halfHeight - radius, halfHeight + radius) gen3
-    (bigVelocity, gen5) = randomR (10  :: Int           , 20                 ) gen4
-    (side       , gen6) = randomR (0  :: Int            , 3                  ) gen5
-
-    (x, y) = case side of -- pick a side
-               0 -> (fromIntegral randomX, - halfHeightFloat - r)
-               1 -> (fromIntegral randomX,   halfHeightFloat + r)
-               2 -> (- halfWidthFloat - r, fromIntegral randomY)
-               _ -> (halfWidthFloat   + r, fromIntegral randomY)
-
-    (dx, dy) = v `mulSV` normalizeV (a - x, b - y)
-    (a, b) = location (player gstate)
-    v = fromIntegral bigVelocity / 10
-    r = fromIntegral radius
+    width  = halfWidthFloat - radius p
+    height = halfHeightFloat - radius p
 
 checkMovementKeyPressed :: (Char, Bool) -> Player -> Player
 checkMovementKeyPressed ('w', True) p = boost p
 checkMovementKeyPressed ('a', True) p = steer p inputSteerPlayer 
 checkMovementKeyPressed ('d', True) p = steer p (- inputSteerPlayer)
 checkMovementKeyPressed _ gstate = gstate
+
+
+newBullet :: GameState -> Int -> Maybe Bullet
+newBullet gstate r 
+    | i < length as = Just (shootBullet (as!!i) gstate)
+    | otherwise     = Nothing
+  where
+    as = aliens gstate
+    (i, _) = randomR (0, alienBulletOdds) (mkStdGen r)
+    -- every alien has 1 / 100 probability to shoot
