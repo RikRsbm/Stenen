@@ -66,6 +66,7 @@ update gstate r
            player = pCheckBounds (glide (foldr checkMovementKeyPressed (player gstate) movementKeys))
          , stenen = addMaybe (randomSteen r gstate) (map glide (filter checkWithinBounds notShotDownStenen))
          , bullets = map glide (filter checkWithinBounds (bullets gstate))
+         , aliens = aliens gstate
          , alienBullets = alienBullets gstate
          , score = score gstate + steenScoreMultiplier * (length (stenen gstate) - length notShotDownStenen) 
          }
