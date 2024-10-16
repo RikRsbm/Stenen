@@ -1,7 +1,7 @@
 module Functionality where
 
 import Model
-    ( Movable(steer, location),
+    ( Movable(steer, location, velocity),
       IsRound(..),
       Bullet(Bullet),
       Steen(Steen),
@@ -62,7 +62,7 @@ shootBullet gstate = gstate { bullets = bul : bullets gstate, score = score gsta
   where 
     bul = Bullet loc vec
     loc = location p `addVecToPt` (playerRadius `mulSV` lookDirection p) -- make sure bullet starts at point of player
-    vec = bulletSpeed `mulSV` lookDirection p 
+    vec = (bulletSpeed `mulSV` lookDirection p ) `addVec` velocity p
     p = player gstate
 
 checkWithinBounds :: (IsRound a, Movable a) => a -> Bool
