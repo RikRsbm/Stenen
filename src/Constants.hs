@@ -10,8 +10,11 @@ playerRadius = 15
 bulletRadius :: Float
 bulletRadius = 4
 
-bulletSpeed :: Float
-bulletSpeed = 6
+playerBulletSpeed :: Float -- player bullet gets this speed + speed of player
+playerBulletSpeed = 6
+
+alienBulletSpeed :: Float -- alien bullet gets this speed
+alienBulletSpeed = 6
 
 steenScoreMultiplier :: Int
 steenScoreMultiplier = 3

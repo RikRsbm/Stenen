@@ -6,11 +6,11 @@ import Model
       Bullet(Bullet),
       Steen(Steen),
       Player(..),
-      GameState( bullets, score, player) )
-import General ( addVec, addVecToPt )
+      GameState( player), 
+      Alien )
+import General ( addVec )
 import Constants
     ( playerRadius,
-      bulletSpeed,
       inputAccelPlayer,
       inputSteerPlayer,
       halfWidth,
@@ -41,38 +41,16 @@ pCheckBounds p@(Player { pLocation = (x, y), pVelocity = (dx, dy) })
     width  = halfWidthFloat - playerRadius
     height = halfHeightFloat - playerRadius
 
-pColliding :: Player -> Steen -> Bool
-pColliding p s  
-    | magV (x - a, y - b) < radius s + playerRadius / 2 = True -- /2 so that you actually have to touch the stone if you are sideways
-    | otherwise                                         = False
-  where 
-    (x, y) = location p
-    (a, b) = location s
-
-bColliding :: Steen -> Bullet -> Bool 
-bColliding b s  
+sbColliding :: Steen -> Bullet -> Bool 
+sbColliding b s  
     | magV (x - p, y - q) < radius s + radius b = True
     | otherwise                                 = False
   where 
     (x, y) = location b
     (p, q) = location s
 
-shootBullet :: GameState -> GameState
-shootBullet gstate = gstate { bullets = bul : bullets gstate, score = score gstate - 1 }
-  where 
-    bul = Bullet loc vec
-    loc = location p `addVecToPt` (playerRadius `mulSV` lookDirection p) -- make sure bullet starts at point of player
-    vec = (bulletSpeed `mulSV` lookDirection p ) `addVec` velocity p
-    p = player gstate
-
-checkWithinBounds :: (IsRound a, Movable a) => a -> Bool
-checkWithinBounds m = x < width  && x > - width &&
-                      y < height && y > - height
-  where 
-    r = radius m
-    (x, y) = location m
-    width  = halfWidthFloat  + r + 1 -- +1 so spawned stones don't immediately despawn
-    height = halfHeightFloat + r + 1
+alienShootBullet :: GameState -> Alien -> GameState
+alienShootBullet = undefined
 
 randomSteen :: Int -> GameState -> Maybe Steen
 randomSteen seed gstate 

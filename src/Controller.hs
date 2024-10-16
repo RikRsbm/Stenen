@@ -4,13 +4,19 @@
 --   in response to time and user input
 module Controller where
 
-import Model ( Movable(glide), GameState(..), initialState, wPressed, aPressed, dPressed, Status (GameOver, PreStart, Running, Paused, FirstStep) )
+import Model
+    ( Movable(glide),
+      GameState(..),
+      initialState,
+      wPressed,
+      aPressed,
+      dPressed,
+      Status (GameOver, PreStart, Running, Paused, FirstStep),
+      CanShoot (shootBullet),
+      IsRound (pColliding, checkWithinBounds) )
 import Functionality
     ( pCheckBounds,
-      pColliding,
-      bColliding,
-      shootBullet,
-      checkWithinBounds,
+      sbColliding,
       randomSteen,
       checkMovementKeyPressed )
 import Constants ( steenScoreMultiplier, highscorePath )
@@ -24,6 +30,7 @@ import System.Random ( randomIO, Random (random) )
 import Text.Read (readMaybe)
 import Data.Maybe (fromMaybe)
 import Control.Monad (when)
+import Foreign (new)
 
 
 
@@ -34,7 +41,9 @@ step :: Float -> GameState -> IO GameState
 step _ gstate 
     | status gstate == FirstStep = readHighscore gstate
     | status gstate == GameOver || status gstate == Paused || status gstate == PreStart = return gstate 
-    | any (pColliding (player gstate)) (stenen gstate) = finishGame gstate            
+    | any (pColliding (player gstate)) (stenen gstate) ||
+      any (pColliding (player gstate)) (alienBullets gstate)  
+        = finishGame gstate            
     | otherwise = do r <- randomIO
                      return (update gstate r)
 
@@ -57,10 +66,11 @@ update gstate r
            player = pCheckBounds (glide (foldr checkMovementKeyPressed (player gstate) movementKeys))
          , stenen = addMaybe (randomSteen r gstate) (map glide (filter checkWithinBounds notShotDownStenen))
          , bullets = map glide (filter checkWithinBounds (bullets gstate))
+         , alienBullets = alienBullets gstate
          , score = score gstate + steenScoreMultiplier * (length (stenen gstate) - length notShotDownStenen) 
          }
   where  
-    notShotDownStenen = filter (\steen -> not (any (bColliding steen) (bullets gstate))) (stenen gstate)
+    notShotDownStenen = filter (\steen -> not (any (sbColliding steen) (bullets gstate))) (stenen gstate)
     movementKeys = [('w', wPressed gstate), ('a', aPressed gstate), ('d', dPressed gstate)] 
     
 
@@ -78,7 +88,7 @@ inputKey k@(EventKey (Char 'w') Down _ _) gstate@(GameState { status = PreStart 
     = inputKey k (gstate { status = Running })
 
 inputKey (EventKey (SpecialKey KeyEnter) Down _ _) gstate@(GameState { status = Running }) 
-    = shootBullet gstate
+    = shootBullet (player gstate) gstate
 
 inputKey (EventKey (SpecialKey KeyEsc) Down _ _) gstate@(GameState { status = Running }) 
     = gstate { status = Paused }

@@ -49,7 +49,7 @@ viewPure gstate = pictures pics
 
     playerPic = viewPlayer (player gstate)
     steenPics = map viewSteen (stenen gstate)
-    bulletPics = map viewBullet (bullets gstate)
+    bulletPics = map (viewBullet red) (bullets gstate)
     scorePic = viewScore (score gstate)
     highscorePic = viewHighscore (highscore gstate)
     statusPic = viewStatus (status gstate)
@@ -77,8 +77,8 @@ viewSteen :: Steen -> Picture
 viewSteen s = translate x y (color white (circle (radius s))) 
   where (x, y) = location s
 
-viewBullet :: Bullet -> Picture
-viewBullet b = translate x y (color red (circle bulletRadius))
+viewBullet :: Color -> Bullet -> Picture
+viewBullet c b = translate x y (color c (circle bulletRadius))
   where (x, y) = location b
 
 viewScore :: Int -> Picture

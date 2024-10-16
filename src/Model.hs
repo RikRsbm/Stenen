@@ -4,10 +4,10 @@
 module Model where
 
 import Constants
-    ( lookDirectionVecMagnitude, bulletRadius, autoDecelPlayer )
+    ( lookDirectionVecMagnitude, bulletRadius, autoDecelPlayer, playerRadius, playerBulletSpeed, alienBulletSpeed, halfHeightFloat, halfWidth, halfWidthFloat )
 import Graphics.Gloss ( Point, Vector )
 import Graphics.Gloss.Data.Vector (magV, mulSV, rotateV, normalizeV)
-import General ( subVec )
+import General ( subVec, addVecToPt, addVec )
 
 
 
@@ -16,6 +16,8 @@ data GameState = GameState {
                    player :: Player 
                  , stenen :: [Steen] -- list of onscreen asteroids
                  , bullets :: [Bullet] -- list of onscreen bullets
+                 , aliens :: [Alien] -- list of onscreen aliens
+                 , alienBullets :: [Bullet] -- list of onscreen bullets from the alien
                  , wPressed :: Bool -- is 'w' pressed
                  , aPressed :: Bool -- is 'a' pressed?
                  , dPressed :: Bool -- is 'd' pressed?
@@ -29,6 +31,8 @@ initialState = GameState (Player (0, 0)
                                  (0, 0) 
                                  (0, lookDirectionVecMagnitude)
                          ) 
+                         []
+                         []
                          []
                          []
                          False
@@ -61,13 +65,35 @@ data Steen = Steen {
              , sRadius :: Float -- radius of asteroid
              } 
 
+data Alien = Alien {
+               aLocation :: Point
+             , aVelocity :: Vector
+             }
+
 data Bullet = Bullet {
                 bLocation :: Point -- location of bullet
               , bVelocity :: Vector -- velocity of bullet
               }
 
-class IsRound a where
+class Movable a => IsRound a where
     radius :: a -> Float
+
+    pColliding :: Player -> a -> Bool
+    pColliding p s  
+        | magV (x - a, y - b) < radius s + playerRadius / 2 = True -- /2 so that you actually have to touch the stone if you are sideways
+        | otherwise                                         = False
+      where 
+        (x, y) = location p
+        (a, b) = location s
+
+    checkWithinBounds :: a -> Bool
+    checkWithinBounds m = x < width  && x > - width &&
+                          y < height && y > - height
+      where 
+        r = radius m
+        (x, y) = location m
+        width  = halfWidthFloat  + r + 1 -- +1 so spawned stones don't immediately despawn
+        height = halfHeightFloat + r + 1
 
 instance IsRound Steen where
     radius :: Steen -> Float
@@ -76,6 +102,25 @@ instance IsRound Steen where
 instance IsRound Bullet where
     radius :: Bullet -> Float
     radius b = bulletRadius
+
+class CanShoot a where
+    shootBullet :: a -> GameState -> GameState
+
+instance CanShoot Player where
+    shootBullet :: Player -> GameState -> GameState
+    shootBullet p gstate = gstate { bullets = bul : bullets gstate, score = score gstate - 1 }
+      where 
+        bul = Bullet loc vec
+        loc = location p `addVecToPt` (playerRadius `mulSV` lookDirection p) -- make sure bullet starts at point of player
+        vec = (playerBulletSpeed `mulSV` lookDirection p ) `addVec` velocity p
+
+instance CanShoot Alien where
+    shootBullet :: Alien -> GameState -> GameState
+    shootBullet a gstate = gstate { alienBullets = bul : alienBullets gstate }
+      where
+        bul = Bullet loc vec 
+        loc = undefined
+        vec = alienBulletSpeed `mulSV` normalizeV (location (player gstate) `subVec` location a) 
 
 class Movable a where -- things on screen that can move
     location :: a -> Point
@@ -98,7 +143,7 @@ instance Movable Player where
                | otherwise                  = vec `subVec` mulSV autoDecelPlayer (normalizeV vec) -- decelleration
 
     steer :: Player -> Float -> Player
-    steer p angle = p { lookDirection = rotateV angle (lookDirection p) } -- steer 'angle' degrees in direction 'd'
+    steer p angle = p { lookDirection = rotateV angle (lookDirection p) } -- steer lookDirection 'angle' degrees in direction 'd'
 
 instance Movable Steen where
     location :: Steen -> Point
@@ -112,7 +157,7 @@ instance Movable Steen where
         = s { sLocation = (x + dx, y + dy) }
 
     steer :: Steen -> Float -> Steen -- not used yet
-    steer s angle = s { sVelocity = rotateV angle (velocity s) } -- steer 'angle' degrees in direction 'd'
+    steer s angle = s { sVelocity = rotateV angle (velocity s) } -- steer velocity 'angle' degrees in direction 'd'
 
 instance Movable Bullet where
     location :: Bullet -> Point
@@ -125,8 +170,22 @@ instance Movable Bullet where
     glide b@(Bullet { bLocation = (x, y), bVelocity = (dx, dy) }) 
         = b { bLocation = (x + dx, y + dy) }
 
-    steer :: Bullet -> Float -> Bullet -- not used yet
-    steer b angle = b { bVelocity = rotateV angle (velocity b) } -- steer 'angle' degrees in direction 'd'
+    steer :: Bullet -> Float -> Bullet -- not used yet, might use it in future
+    steer b angle = b { bVelocity = rotateV angle (velocity b) } -- steer velocity 'angle' degrees in direction 'd'
+
+instance Movable Alien where
+    location :: Alien -> Point
+    location = aLocation
+
+    velocity :: Alien -> Vector
+    velocity = aVelocity
+
+    glide :: Alien -> Alien
+    glide a@(Alien { aLocation = (x, y), aVelocity = (dx, dy) }) 
+        = a { aLocation = (x + dx, y + dy) }
+
+    steer :: Alien -> Float -> Alien -- not used yet, miht use it in future
+    steer a angle = a { aVelocity = rotateV angle (velocity a) } -- steer 'angle' degrees in direction 'd'
 
 
 
