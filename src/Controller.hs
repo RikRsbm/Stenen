@@ -1,5 +1,3 @@
--- | This module defines how the state changes
---   in response to time and user input
 module Controller where
 
 import Model
@@ -67,7 +65,9 @@ input :: Event -> GameState -> IO GameState
 input e gstate = return (inputKey e gstate)
 
 inputKey :: Event -> GameState -> GameState
-inputKey (EventKey (Char 'r') Down _ _) GameState { status = GameOver} = initialState
+inputKey (EventKey (Char 'r') Down _ _) gstate@(GameState { status = GameOver }) 
+    = initialState (ufoPic gstate)
+
 inputKey k@(EventKey (Char 'w') Down _ _) gstate@(GameState { status = PreStart }) -- if w is pressed for the first time, start the game and call inputkey again to move forward
     = inputKey k (gstate { status = Running })
 

@@ -1,5 +1,3 @@
--- | This module defines how to turn
---   the game state into a picture
 module View where
 
 import Model
@@ -12,22 +10,22 @@ import Graphics.Gloss
 
 
 view :: GameState -> IO Picture
-view gstate = do ufo <- loadBMP "Pictures/Ufo.bmp"
-                 return (viewPure gstate ufo)
+view gstate = return (viewPure gstate)
 
-viewPure :: GameState -> Picture -> Picture
-viewPure gstate ufo = pictures pics
+viewPure :: GameState -> Picture
+viewPure gstate = pictures pics
   where
     pics = steenPics ++ alienPics ++ bulletPics ++ alienBulletPics ++ [playerPic, scorePic, highscorePic, statusPic]
 
     playerPic = viewPlayer (player gstate)
     steenPics = map viewSteen (stenen gstate)
-    alienPics = map (viewAlien ufo) (aliens gstate)
+    alienPics = map (viewAlien (ufoPic gstate)) (aliens gstate)
     bulletPics = map (viewBullet red) (bullets gstate)
     alienBulletPics = map (viewBullet lightPink) (alienBullets gstate)
     scorePic = viewScore (score gstate)
     highscorePic = viewHighscore (highscore gstate)
     statusPic = viewStatus (status gstate)
+
 
 
 viewPlayer :: Player -> Picture
@@ -53,7 +51,7 @@ viewSteen s = translate x y (color white (circle (radius s)))
   where (x, y) = location s
 
 viewAlien :: Picture -> Alien -> Picture
-viewAlien ufo a = translate x y (scale ufoScale ufoScale ufo)
+viewAlien ufo a = translate x y ufo
   where (x, y) = location a
 
 viewBullet :: Color -> Bullet -> Picture

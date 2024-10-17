@@ -1,6 +1,4 @@
 {-# LANGUAGE InstanceSigs #-}
--- | This module contains the data types
---   which represent the state of the game
 module Model where
 
 import Constants
@@ -24,9 +22,10 @@ data GameState = GameState {
                  , status :: Status -- status of game
                  , score :: Int -- current score
                  , highscore :: Int -- all time highscore (gets loaded in at start of game)
+                 , ufoPic :: Picture
                  }
 
-initialState :: GameState
+initialState :: Picture -> GameState
 initialState = GameState (Player (0, 0) 
                                  (0, 0) 
                                  (0, lookDirectionVecMagnitude)
@@ -41,6 +40,7 @@ initialState = GameState (Player (0, 0)
                          FirstStep
                          0
                          0
+
 
 
 

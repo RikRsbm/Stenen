@@ -1,4 +1,5 @@
 module Constants where
+    
 import Graphics.Gloss
 
 
