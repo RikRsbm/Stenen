@@ -6,6 +6,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Data.Vector 
 import General 
 import System.Random 
+import Data.Maybe
 
 
 
@@ -255,18 +256,8 @@ instance CanCollideWithPlayerBullet Alien where
 
 
 class (TempObject a, CanCollideWithPlayerBullet a) => RandomObject a where
-    perhapsCreateNew :: GameState -> Int -> Maybe a
-
-    updateRemoveAndAdd :: GameState -> Int -> [a] -> ([a], Int)
-    updateRemoveAndAdd gstate r as = (addMaybe (perhapsCreateNew gstate r) (updateLocations 3 nonCollidedAs), 
-                                      length as - length nonCollidedAs)
-      where nonCollidedAs = filter (\a -> not (any (bColliding a) (bullets gstate))) as
-    
-
-
-    updateAndRemove :: GameState -> Float -> [a] -> ([a], Int)
-    updateAndRemove gstate secs as = (updateLocations secs nonCollidedAs, length as - length nonCollidedAs)
-      where nonCollidedAs = filter (\a -> not (any (bColliding a) (bullets gstate))) as
+    perhapsCreateNew :: GameState -> Int -> Maybe a    
+    removeColliding :: Float -> GameState -> [a] -> ([a], Int)
     
 instance RandomObject Steen where
     perhapsCreateNew :: GameState -> Int -> Maybe Steen
@@ -292,6 +283,14 @@ instance RandomObject Steen where
         (a, b) = location (player gstate)
         r = fromIntegral radius
 
+    removeColliding :: Float -> GameState -> [Steen] -> ([Steen], Int)
+    removeColliding secs gstate ss = (exploded' ++ collided' ++ nonCollided, length collided)
+      where 
+        (notExploded, exploded) = partition ((== NotExploded) . animationState) ss
+        (collided, nonCollided) = partition (\s -> any (bColliding s) (bullets gstate)) notExploded
+        collided' = mapMaybe (handleSteenAnimationUpdate secs) collided
+        exploded' = mapMaybe (handleSteenAnimationUpdate secs) exploded
+
 instance RandomObject Alien where -- we don't use gstate yet, we might in the future (so that it can move towards the player or something like that)
     perhapsCreateNew :: GameState -> Int -> Maybe Alien
     perhapsCreateNew _ seed 
@@ -311,3 +310,18 @@ instance RandomObject Alien where -- we don't use gstate yet, we might in the fu
                           _ -> (halfWidthFloat   + alienRadius, fromIntegral randomY           , - alienSpeed, 0           )
 
         r = round alienRadius
+
+    removeColliding :: Float -> GameState -> [Alien] -> ([Alien], Int)
+    removeColliding secs gstate as = (nonCollidedAs, length as - length nonCollidedAs)
+      where nonCollidedAs = filter (\a -> not (any (bColliding a) (bullets gstate))) as
+
+
+
+handleSteenAnimationUpdate :: Float -> Steen -> Maybe Steen
+handleSteenAnimationUpdate secs s@(Steen { animationState = NotExploded })
+    = Just $ s { animationState = AnimationState Zero 0 }
+handleSteenAnimationUpdate secs s@(Steen { animationState = (AnimationState frame time) })
+    | time + secs > timePerImplosionFrame = case frame of 
+        Four -> Nothing
+        _    -> Just $ s { animationState = AnimationState (succ frame) 0 }
+    | otherwise = Just $ s { animationState = AnimationState frame (time + secs) }

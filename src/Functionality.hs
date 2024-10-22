@@ -51,3 +51,4 @@ pAutoDecceleration p@(Player { pVelocity = vec }) = p { pVelocity = newVec }
   where
     newVec | magV vec < autoDecelPlayer = (0, 0) -- if player (almost) stands  still
            | otherwise                  = vec `subVec` mulSV autoDecelPlayer (normalizeV vec) -- decelleration
+

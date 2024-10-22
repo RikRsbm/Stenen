@@ -25,3 +25,10 @@ addVecToPt (x, y) (x', y') = (x + x',
 addMaybe :: Maybe a -> [a] -> [a]
 addMaybe Nothing xs = xs
 addMaybe (Just x) xs = x : xs
+
+
+partition :: (a -> Bool) -> [a] -> ([a], [a])
+partition _ []                 = ([],[])
+partition p (x:xs) | p x       = (x:ys, zs)
+                   | otherwise = (ys, x:zs)
+    where (ys, zs) = partition p xs

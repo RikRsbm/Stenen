@@ -19,7 +19,7 @@ step :: Float -> GameState -> IO GameState
 step secs gstate
     | status gstate == FirstStep = readHighscore gstate
     | status gstate == GameOver || status gstate == Paused || status gstate == PreStart = return gstate
-    | any (pColliding p) (stenen gstate) ||
+    | any (pColliding p) (filter ((== NotExploded) . animationState) (stenen gstate)) ||
       any (pColliding p) (aliens gstate) ||
       any (pColliding p) (alienBullets gstate)
         = finishGame gstate
@@ -49,15 +49,15 @@ updateEveryStep secs gstate
     = gstate 
         {
           player = pCheckBounds (glide secs (player gstate))
-        , stenen = stenenUpdated
+        , stenen = updateLocations secs remainingStenen -- zorgen dat geschoten stenen naar ander frame gaan
         , bullets = updateLocations secs (bullets gstate)
-        , aliens = aliensUpdated
+        , aliens = updateLocations secs remainingAliens
         , alienBullets = updateLocations secs (alienBullets gstate)
         , score = score gstate + steenScoreMultiplier * stenenShot + alienScoreMultiplier * aliensShot 
         }
   where 
-    (stenenUpdated, stenenShot) = updateAndRemove gstate secs (stenen gstate)
-    (aliensUpdated, aliensShot) = updateAndRemove gstate secs (aliens gstate)
+    (remainingStenen, stenenShot) = removeColliding secs gstate (stenen gstate) -- also handles animation updates
+    (remainingAliens, aliensShot) = removeColliding secs gstate (aliens gstate)
 
 updatePerTimeUnit :: Int -> GameState -> GameState
 updatePerTimeUnit r gstate

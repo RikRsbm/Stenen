@@ -100,5 +100,8 @@ alienScoreMultiplier = 4
 bigUpdatesPerStep :: Float
 bigUpdatesPerStep = 60
 
+timePerImplosionFrame :: Float
+timePerImplosionFrame = 0.1
+
 
 -- speeds are in pixels/sec
