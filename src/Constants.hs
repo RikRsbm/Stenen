@@ -15,10 +15,10 @@ bulletRadius :: Float
 bulletRadius = 4
 
 playerBulletSpeed :: Float -- player bullet gets this speed + speed of player
-playerBulletSpeed = 6
+playerBulletSpeed = 360
 
 alienBulletSpeed :: Float -- alien bullet gets this speed
-alienBulletSpeed = 4
+alienBulletSpeed = 240
 
 steenScoreMultiplier :: Int
 steenScoreMultiplier = 3
@@ -26,12 +26,12 @@ steenScoreMultiplier = 3
 -- for editing steen values, edit them in the "perhapsCreateNew" function (too much variables to put here)
 
 autoDecelPlayer :: Float -- amount of automatic decelleration per step
-autoDecelPlayer = 0.04
+autoDecelPlayer = 2.5
 
-inputAccelPlayer :: Float -- amount of acceleration per 'w' press
-inputAccelPlayer = 0.15
+inputAccelPlayer :: Float -- amount of acceleration with 'w' press per step
+inputAccelPlayer = 9
 
-inputSteerPlayer :: Float -- angle that player steers per 'a' or 'd' press
+inputSteerPlayer :: Float -- angle that player steers with 'a' or 'd' press per step
 inputSteerPlayer = pi / 40
 
 screenWidth :: Int
@@ -88,8 +88,17 @@ ufoScale = 2 * alienRadius / ufoBmpSize
 ufoBmpSize :: Float
 ufoBmpSize = 70
 
+implosionBmpSize :: Float
+implosionBmpSize = 70
+
 alienSpeed :: Float
-alienSpeed = 2
+alienSpeed = 120
 
 alienScoreMultiplier :: Int
 alienScoreMultiplier = 4
+
+bigUpdatesPerStep :: Float
+bigUpdatesPerStep = 60
+
+
+-- speeds are in pixels/sec

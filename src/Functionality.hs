@@ -42,3 +42,12 @@ newBullet gstate r
     as = aliens gstate
     (i, _) = randomR (0, alienBulletOdds) (mkStdGen r)
     -- every alien has 1 / 100 probability to shoot
+
+steer :: Player -> Float -> Player
+steer p angle = p { lookDirection = rotateV angle (lookDirection p) } -- steer lookDirection 'angle' degrees in direction 'd'
+
+pAutoDecceleration :: Player -> Player
+pAutoDecceleration p@(Player { pVelocity = vec }) = p { pVelocity = newVec }
+  where
+    newVec | magV vec < autoDecelPlayer = (0, 0) -- if player (almost) stands  still
+           | otherwise                  = vec `subVec` mulSV autoDecelPlayer (normalizeV vec) -- decelleration

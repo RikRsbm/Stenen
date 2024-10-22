@@ -18,7 +18,7 @@ viewPure gstate = pictures pics
     pics = steenPics ++ alienPics ++ bulletPics ++ alienBulletPics ++ [playerPic, scorePic, highscorePic, statusPic]
 
     playerPic = viewPlayer (player gstate)
-    steenPics = map viewSteen (stenen gstate)
+    steenPics = map (viewSteen (implosionPics gstate)) (stenen gstate)
     alienPics = map (viewAlien (ufoPic gstate)) (aliens gstate)
     bulletPics = map (viewBullet red) (bullets gstate)
     alienBulletPics = map (viewBullet lightPink) (alienBullets gstate)
@@ -46,9 +46,28 @@ viewPlayer p = pictures [lineLeft, lineRight, lineBack]
     pDx' = playerRadius * dx' * playerBackLineRatio
     pDy' = playerRadius * dy' * playerBackLineRatio
 
-viewSteen :: Steen -> Picture
-viewSteen s = translate x y (color white (circle (radius s))) 
+
+
+
+
+
+viewSteen :: [Picture] -> Steen -> Picture
+viewSteen _ s@(Steen { animationState = NotExploded }) = viewRoundSteen s
+viewSteen pics s@(Steen { animationState = AnimationState i _ }) = viewPictureSteen (pics !! fromEnum i) s
+
+viewPictureSteen :: Picture -> Steen -> Picture
+viewPictureSteen pic s = translate x y (scale sc sc pic)
+  where 
+    (x, y) = location s
+    sc = 2 * radius s / implosionBmpSize
+
+viewRoundSteen :: Steen -> Picture
+viewRoundSteen s = translate x y (color white (circle (radius s))) 
   where (x, y) = location s
+
+
+
+
 
 viewAlien :: Picture -> Alien -> Picture
 viewAlien ufo a = translate x y ufo

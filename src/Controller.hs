@@ -16,15 +16,21 @@ import Text.Read (readMaybe)
 
 
 step :: Float -> GameState -> IO GameState
-step _ gstate
+step secs gstate
     | status gstate == FirstStep = readHighscore gstate
     | status gstate == GameOver || status gstate == Paused || status gstate == PreStart = return gstate
     | any (pColliding p) (stenen gstate) ||
       any (pColliding p) (aliens gstate) ||
       any (pColliding p) (alienBullets gstate)
         = finishGame gstate
-    | otherwise = update gstate <$> randomIO
-  where p = player gstate
+    | elapsedTime gstate + secs > 1 / bigUpdatesPerStep 
+        = do r <- randomIO
+             return $ updateEveryStep secs (updatePerTimeUnit r (gstate { elapsedTime = 0 }))
+    | otherwise 
+        = return $ updateEveryStep secs (gstate { elapsedTime = elapsedTime gstate + secs })
+  where 
+    p = player gstate
+    gstateNew = updateEveryStep secs gstate
 
 readHighscore :: GameState -> IO GameState
 readHighscore gstate
@@ -38,22 +44,31 @@ finishGame gstate
            $ writeFile highscorePath (show (score gstate))
          return $ gstate { status = GameOver}
 
-update :: GameState -> Int -> GameState
-update gstate r
+updateEveryStep :: Float -> GameState -> GameState
+updateEveryStep secs gstate 
+    = gstate 
+        {
+          player = pCheckBounds (glide secs (player gstate))
+        , stenen = stenenUpdated
+        , bullets = updateLocations secs (bullets gstate)
+        , aliens = aliensUpdated
+        , alienBullets = updateLocations secs (alienBullets gstate)
+        , score = score gstate + steenScoreMultiplier * stenenShot + alienScoreMultiplier * aliensShot 
+        }
+  where 
+    (stenenUpdated, stenenShot) = updateAndRemove gstate secs (stenen gstate)
+    (aliensUpdated, aliensShot) = updateAndRemove gstate secs (aliens gstate)
+
+updatePerTimeUnit :: Int -> GameState -> GameState
+updatePerTimeUnit r gstate
     =  gstate
          {
-           player = pCheckBounds (glide (foldr checkMovementKeyPressed (player gstate) keysPressed))
-         , stenen = stenenUpdated
-         , bullets = updateLocations (bullets gstate)
-         , aliens = aliensUpdated
-         , alienBullets = addMaybe (newBullet gstate r) (updateLocations (alienBullets gstate))
-         , score = score gstate + steenScoreMultiplier * stenenShot + alienScoreMultiplier * aliensShot
+           player = pAutoDecceleration (foldr checkMovementKeyPressed (player gstate) keysPressed)
+         , stenen = addMaybe (perhapsCreateNew gstate r) (stenen gstate)
+         , aliens = addMaybe (perhapsCreateNew gstate r) (aliens gstate)
          }
   where
     keysPressed = [('w', wPressed gstate), ('a', aPressed gstate), ('d', dPressed gstate)]
-
-    (stenenUpdated, stenenShot) = updateRemoveAndAdd gstate r (stenen gstate)
-    (aliensUpdated, aliensShot) = updateRemoveAndAdd gstate r (aliens gstate)
 
 
 
@@ -66,7 +81,7 @@ input e gstate = return (inputKey e gstate)
 
 inputKey :: Event -> GameState -> GameState
 inputKey (EventKey (Char 'r') Down _ _) gstate@(GameState { status = GameOver }) 
-    = initialState (ufoPic gstate)
+    = initialState (ufoPic gstate) (implosionPics gstate)
 
 inputKey k@(EventKey (Char 'w') Down _ _) gstate@(GameState { status = PreStart }) -- if w is pressed for the first time, start the game and call inputkey again to move forward
     = inputKey k (gstate { status = Running })

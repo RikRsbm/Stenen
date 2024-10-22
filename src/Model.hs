@@ -22,10 +22,12 @@ data GameState = GameState {
                  , status :: Status -- status of game
                  , score :: Int -- current score
                  , highscore :: Int -- all time highscore (gets loaded in at start of game)
+                 , elapsedTime :: Float
                  , ufoPic :: Picture
+                 , implosionPics :: [Picture]
                  }
 
-initialState :: Picture -> GameState
+initialState :: Picture -> [Picture] -> GameState
 initialState = GameState (Player (0, 0) 
                                  (0, 0) 
                                  (0, lookDirectionVecMagnitude)
@@ -38,6 +40,7 @@ initialState = GameState (Player (0, 0)
                          False
                          False
                          FirstStep
+                         0
                          0
                          0
 
@@ -63,6 +66,7 @@ data Steen = Steen {
                sLocation :: Point -- location of asteroid
              , sVelocity :: Vector -- velocity of asteroid
              , sRadius :: Float -- radius of asteroid
+             , animationState :: AnimationState -- state of the animation
              } 
 
 data Alien = Alien {
@@ -75,32 +79,17 @@ data Bullet = Bullet {
               , bVelocity :: Vector -- velocity of bullet
               }
 
-class Movable a => TempObject a where
-    updateLocations :: [a] -> [a]
-    updateLocations = map glide . filter checkWithinBounds
+data AnimationState = NotExploded 
+                    | AnimationState AnimationStateInt Float -- which state, how many seconds has it been at this state
+                    deriving (Show, Eq)
 
-    pColliding :: Player -> a -> Bool
-    pColliding p m  
-        | magV (x - a, y - b) < radius m + playerRadius / 2 = True -- /2 so that you actually have to touch the stone / bullet / alien if you are sideways
-        | otherwise                                         = False
-      where 
-        (x, y) = location p
-        (a, b) = location m
+data AnimationStateInt = Zero | One | Two | Three | Four
+    deriving (Show, Eq, Enum)
 
-    checkWithinBounds :: a -> Bool
-    checkWithinBounds m = x < width  && x > - width &&
-                          y < height && y > - height
-      where 
-        r = radius m
-        (x, y) = location m
-        width  = halfWidthFloat  + r + 1 -- +1 so spawned stones don't immediately despawn
-        height = halfHeightFloat + r + 1
 
-instance TempObject Steen where
 
-instance TempObject Bullet where
 
-instance TempObject Alien where
+
 
 class CanShoot a where
     shootBullet :: a -> GameState -> Bullet
@@ -119,12 +108,15 @@ instance CanShoot Alien where
         loc = location a `addVec` ((radius a / 2) `mulSV` normalizeV vec)
         vec = alienBulletSpeed `mulSV` normalizeV (location (player gstate) `subVec` location a) 
 
+
+
+
+
 class Movable a where -- things on screen that can move
     radius :: a -> Float
     location :: a -> Point
     velocity :: a -> Vector
-    glide :: a -> a -- how they should glide through space every step
-    steer :: a -> Float -> a -- steers them by certain number of degrees
+    glide :: Float -> a -> a -- how they should glide through space every step
 
 instance Movable Player where
     radius :: Player -> Float
@@ -136,15 +128,9 @@ instance Movable Player where
     velocity :: Player -> Vector
     velocity = pVelocity
 
-    glide :: Player -> Player
-    glide p@(Player { pLocation = (x, y), pVelocity = vec@(dx, dy) }) -- updates player position and velocity
-        = p { pLocation = (x + dx, y + dy), pVelocity = newVec }
-      where 
-        newVec | magV vec < autoDecelPlayer = (0, 0) -- if player (almost) stands  still
-               | otherwise                  = vec `subVec` mulSV autoDecelPlayer (normalizeV vec) -- decelleration
-
-    steer :: Player -> Float -> Player
-    steer p angle = p { lookDirection = rotateV angle (lookDirection p) } -- steer lookDirection 'angle' degrees in direction 'd'
+    glide :: Float -> Player -> Player
+    glide secs p@(Player { pLocation = (x, y), pVelocity = (dx, dy) }) -- updates player position and velocity
+        = p { pLocation = (x + dx * secs, y + dy * secs) }
 
 instance Movable Steen where
     radius :: Steen -> Float
@@ -156,12 +142,9 @@ instance Movable Steen where
     velocity :: Steen -> Vector
     velocity = sVelocity
 
-    glide :: Steen -> Steen
-    glide s@(Steen { sLocation = (x, y), sVelocity = (dx, dy) }) 
-        = s { sLocation = (x + dx, y + dy) }
-
-    steer :: Steen -> Float -> Steen -- not used yet
-    steer s angle = s { sVelocity = rotateV angle (velocity s) } -- steer velocity 'angle' degrees in direction 'd'
+    glide :: Float -> Steen -> Steen
+    glide secs s@(Steen { sLocation = (x, y), sVelocity = (dx, dy) }) 
+        = s { sLocation = (x + dx * secs, y + dy * secs) }
 
 instance Movable Bullet where
     radius :: Bullet -> Float
@@ -173,12 +156,9 @@ instance Movable Bullet where
     velocity :: Bullet -> Vector
     velocity = bVelocity
 
-    glide :: Bullet -> Bullet
-    glide b@(Bullet { bLocation = (x, y), bVelocity = (dx, dy) }) 
-        = b { bLocation = (x + dx, y + dy) }
-
-    steer :: Bullet -> Float -> Bullet -- not used yet, might use it in future
-    steer b angle = b { bVelocity = rotateV angle (velocity b) } -- steer velocity 'angle' degrees in direction 'd'
+    glide :: Float -> Bullet -> Bullet
+    glide secs b@(Bullet { bLocation = (x, y), bVelocity = (dx, dy) }) 
+        = b { bLocation = (x + dx * secs, y + dy * secs) }
 
 instance Movable Alien where
     radius :: Alien -> Float
@@ -190,35 +170,116 @@ instance Movable Alien where
     velocity :: Alien -> Vector
     velocity = aVelocity
 
-    glide :: Alien -> Alien
-    glide a@(Alien { aLocation = (x, y), aVelocity = (dx, dy) }) 
-        = a { aLocation = (x + dx, y + dy) }
+    glide :: Float -> Alien -> Alien
+    glide secs a@(Alien { aLocation = (x, y), aVelocity = (dx, dy) }) 
+        = a { aLocation = (x + dx * secs, y + dy * secs) }
 
-    steer :: Alien -> Float -> Alien -- not used yet, miht use it in future
-    steer a angle = a { aVelocity = rotateV angle (velocity a) } -- steer 'angle' degrees in direction 'd'
 
-class TempObject a => RandomObject a where
+
+
+
+
+class Movable a => TempObject a where
+    updateLocations :: Float -> [a] -> [a]
+    updateLocations secs = map (glide secs) . filter checkWithinBounds
+
+    checkWithinBounds :: a -> Bool
+    checkWithinBounds m = x < width  && x > - width &&
+                          y < height && y > - height
+      where 
+        r = radius m
+        (x, y) = location m
+        width  = halfWidthFloat  + r + 1 -- +1 so spawned stones don't immediately despawn
+        height = halfHeightFloat + r + 1
+
+instance TempObject Steen where
+
+instance TempObject Bullet where
+
+instance TempObject Alien where
+
+
+
+
+
+class Movable a => CanCollideWithPlayer a where
+    pColliding :: Player -> a -> Bool
+    pColliding p m  
+        | magV (x - a, y - b) < radius m + playerRadius / 2 = True -- /2 so that you actually have to touch the stone / bullet / alien if you are sideways
+        | otherwise                                         = False
+      where 
+        (x, y) = location p
+        (a, b) = location m
+
+instance CanCollideWithPlayer Steen where
+
+instance CanCollideWithPlayer Bullet where
+
+instance CanCollideWithPlayer Alien where
+    pColliding :: Player -> Alien -> Bool
+    pColliding p al  
+        | magV (x - a, y - b) < radius al / 2 + playerRadius / 2 = True -- the left /2 is so that you actually have to touch the alien when the alien is sideways
+        | otherwise                                              = False
+      where 
+        (x, y) = location p
+        (a, b) = location al
+
+
+
+
+
+class CanCollideWithPlayerBullet a where
+    bColliding :: a -> Bullet -> Bool
+
+instance CanCollideWithPlayerBullet Steen where
+    bColliding :: Steen -> Bullet -> Bool
+    bColliding s b  
+        | magV (x - p, y - q) < radius s + radius b = True
+        | otherwise                                 = False
+      where 
+        (x, y) = location b
+        (p, q) = location s
+
+instance CanCollideWithPlayerBullet Alien where
+    bColliding :: Alien -> Bullet -> Bool
+    bColliding a b  
+        | magV (x - p, y - q) < radius a / 2 + radius b = True -- /2 so that you have to hit the center of the alien, you can shoot over or under it and hit it
+        | otherwise                                     = False
+      where 
+        (x, y) = location b
+        (p, q) = location a
+
+
+
+
+
+
+class (TempObject a, CanCollideWithPlayerBullet a) => RandomObject a where
     perhapsCreateNew :: GameState -> Int -> Maybe a
 
     updateRemoveAndAdd :: GameState -> Int -> [a] -> ([a], Int)
-    updateRemoveAndAdd gstate r as = (addMaybe (perhapsCreateNew gstate r) (updateLocations nonCollidedAs), 
+    updateRemoveAndAdd gstate r as = (addMaybe (perhapsCreateNew gstate r) (updateLocations 3 nonCollidedAs), 
                                       length as - length nonCollidedAs)
       where nonCollidedAs = filter (\a -> not (any (bColliding a) (bullets gstate))) as
+    
 
-    bColliding :: a -> Bullet -> Bool 
+
+    updateAndRemove :: GameState -> Float -> [a] -> ([a], Int)
+    updateAndRemove gstate secs as = (updateLocations secs nonCollidedAs, length as - length nonCollidedAs)
+      where nonCollidedAs = filter (\a -> not (any (bColliding a) (bullets gstate))) as
     
 instance RandomObject Steen where
     perhapsCreateNew :: GameState -> Int -> Maybe Steen
     perhapsCreateNew gstate seed 
-        | creationOdds == 0 = Just (Steen (x, y) (dx, dy) r)
+        | creationOdds == 0 = Just (Steen (x, y) (dx, dy) r NotExploded)
         | otherwise         = Nothing
       where
         gen = mkStdGen seed
-        (creationOdds , gen1) = randomR (0  :: Int            , 100                ) gen 
+        (creationOdds, gen1) = randomR (0  :: Int            , 100                ) gen 
         (radius      , gen2) = randomR (15 :: Int            , 40                 ) gen1
         (randomX     , gen3) = randomR (- halfWidth  - radius, halfWidth  + radius) gen2
         (randomY     , gen4) = randomR (- halfHeight - radius, halfHeight + radius) gen3
-        (bigVelocity , gen5) = randomR (10  :: Int           , 20                 ) gen4
+        (speed       , gen5) = randomR (60  :: Int           , 120                 ) gen4
         (side        , _   ) = randomR (0  :: Int            , 3                  ) gen5
 
         (x, y) = case side of -- pick a side
@@ -227,18 +288,9 @@ instance RandomObject Steen where
                   2 -> (- halfWidthFloat - r, fromIntegral randomY)
                   _ -> (halfWidthFloat   + r, fromIntegral randomY)
 
-        (dx, dy) = v `mulSV` normalizeV (a - x, b - y)
+        (dx, dy) = fromIntegral speed `mulSV` normalizeV (a - x, b - y)
         (a, b) = location (player gstate)
-        v = fromIntegral bigVelocity / 10
         r = fromIntegral radius
-
-    bColliding :: Steen -> Bullet -> Bool
-    bColliding s b  
-        | magV (x - p, y - q) < radius s + radius b = True
-        | otherwise                                 = False
-      where 
-        (x, y) = location b
-        (p, q) = location s
 
 instance RandomObject Alien where -- we don't use gstate yet, we might in the future (so that it can move towards the player or something like that)
     perhapsCreateNew :: GameState -> Int -> Maybe Alien
@@ -259,18 +311,3 @@ instance RandomObject Alien where -- we don't use gstate yet, we might in the fu
                           _ -> (halfWidthFloat   + alienRadius, fromIntegral randomY           , - alienSpeed, 0           )
 
         r = round alienRadius
-
-    bColliding :: Alien -> Bullet -> Bool
-    bColliding a b  
-        | magV (x - p, y - q) < radius a / 2 + radius b = True -- /2 so that you have to hit the center of the alien, you can shoot over or under it and hit it
-        | otherwise                                     = False
-      where 
-        (x, y) = location b
-        (p, q) = location a
-
-
-
-
-
-
-
