@@ -116,7 +116,7 @@ viewStatus PreStart = pictures [viewText (explanationX, 200) bigTextScale blue "
                               , viewText (explanationX, 20) bigTextScale blue "Esc to pause"
                               , viewText (-150, statusY) bigTextScale blue "W to start"]
 viewStatus Paused = viewText (-300, statusY) bigTextScale blue "paused, Esc to resume"
-viewStatus GameOver = viewText (-160, statusY) bigTextScale blue "R to restart"
+viewStatus GameOver = viewText (-320, statusY) bigTextScale blue "Game over, R to restart"
 viewStatus _ = Blank
 
 viewText :: Point -> Float -> Color -> String -> Picture
