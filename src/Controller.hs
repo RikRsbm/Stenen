@@ -19,13 +19,14 @@ step :: Float -> GameState -> IO GameState
 step secs gstate
     | status gstate == FirstStep = readHighscore gstate
     | status gstate == GameOver || status gstate == Paused || status gstate == PreStart = return gstate
-    | any (pColliding p) (filter ((== NotExploded) . animationState) (stenen gstate)) ||
+    | any (pColliding p) (filter ((== Alive) . sState) (stenen gstate)) ||
       any (pColliding p) (aliens gstate) ||
       any (pColliding p) (alienBullets gstate)
         = finishGame gstate
-    | elapsedTime gstate + secs > 1 / bigUpdatesPerStep 
+    | elapsedTime gstate + secs > 1 / bigUpdatesPerSec 
         = do r <- randomIO
-             return $ updateEveryStep secs (updatePerTimeUnit r (gstate { elapsedTime = 0 }))
+             return $ updateEveryStep secs (updatePerTimeUnit r (gstate { elapsedTime = elapsedTime gstate + secs - 1 / bigUpdatesPerSec}))
+             -- ^ we choose this exact elapsedTime instead of 0 so that lower framerates don't unnecessarily put elapsedTime at 0 all the time (which makes everything slower)
     | otherwise 
         = return $ updateEveryStep secs (gstate { elapsedTime = elapsedTime gstate + secs })
   where 
@@ -48,7 +49,7 @@ updateEveryStep :: Float -> GameState -> GameState
 updateEveryStep secs gstate 
     = gstate 
         {
-          player = pCheckBounds (glide secs (player gstate))
+          player = updateBoostAnimation secs (pCheckBounds (glide secs (player gstate)))
         , stenen = updateLocations secs remainingStenen -- zorgen dat geschoten stenen naar ander frame gaan
         , bullets = updateLocations secs (bullets gstate)
         , aliens = updateLocations secs remainingAliens
@@ -56,7 +57,7 @@ updateEveryStep secs gstate
         , score = score gstate + steenScoreMultiplier * stenenShot + alienScoreMultiplier * aliensShot 
         }
   where 
-    (remainingStenen, stenenShot) = removeColliding secs gstate (stenen gstate) -- also handles animation updates
+    (remainingStenen, stenenShot) = removeColliding secs gstate (stenen gstate) -- also handles animation updates if frame time has been exceeded
     (remainingAliens, aliensShot) = removeColliding secs gstate (aliens gstate)
 
 updatePerTimeUnit :: Int -> GameState -> GameState
@@ -66,6 +67,7 @@ updatePerTimeUnit r gstate
            player = pAutoDecceleration (foldr checkMovementKeyPressed (player gstate) keysPressed)
          , stenen = addMaybe (perhapsCreateNew gstate r) (stenen gstate)
          , aliens = addMaybe (perhapsCreateNew gstate r) (aliens gstate)
+         , alienBullets = addMaybe (newBullet gstate r) (alienBullets gstate)
          }
   where
     keysPressed = [('w', wPressed gstate), ('a', aPressed gstate), ('d', dPressed gstate)]
@@ -81,7 +83,7 @@ input e gstate = return (inputKey e gstate)
 
 inputKey :: Event -> GameState -> GameState
 inputKey (EventKey (Char 'r') Down _ _) gstate@(GameState { status = GameOver }) 
-    = initialState (ufoPic gstate) (implosionPics gstate)
+    = initialState (ufoPic gstate) (steenAnimPics gstate) (boostAnimPics gstate)
 
 inputKey k@(EventKey (Char 'w') Down _ _) gstate@(GameState { status = PreStart }) -- if w is pressed for the first time, start the game and call inputkey again to move forward
     = inputKey k (gstate { status = Running })

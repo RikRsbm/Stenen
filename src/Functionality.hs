@@ -12,7 +12,10 @@ import System.Random
 
 boost :: Player -> Player
 boost p@(Player { pVelocity = vec }) 
-    = p { pVelocity = vec `addVec` mulSV inputAccelPlayer (lookDirection p) }
+    = p { pVelocity = vec `addVec` mulSV inputAccelPlayer (lookDirection p), 
+          boostState = case boostState p of 
+              NotBoosting -> BoostFrame Zero2 0 
+              _           -> boostState p}
 
 pCheckBounds :: Player -> Player -- checks whether player goes out of bounds. if so, reset player within bounds
 pCheckBounds p@(Player { pLocation = (x, y), pVelocity = (dx, dy) }) 
@@ -27,12 +30,22 @@ pCheckBounds p@(Player { pLocation = (x, y), pVelocity = (dx, dy) })
     width  = halfWidthFloat - radius p
     height = halfHeightFloat - radius p
 
+updateBoostAnimation :: Float -> Player -> Player
+updateBoostAnimation secs p@(Player { boostState = BoostFrame x time }) 
+    | time + secs > timePerBoostFrame = p { boostState = BoostFrame (case x of 
+                                                                     Two2 -> Zero2
+                                                                     other -> succ other) 
+                                                         (time + secs - timePerBoostFrame) }
+    | otherwise                       = p { boostState = BoostFrame x (time + secs) }
+updateBoostAnimation secs p = p -- not boosting
+
+ 
 checkMovementKeyPressed :: (Char, Bool) -> Player -> Player
 checkMovementKeyPressed ('w', True) p = boost p
+checkMovementKeyPressed ('w', False) p@(Player { boostState = BoostFrame _ _ }) = p { boostState = NotBoosting }
 checkMovementKeyPressed ('a', True) p = steer p inputSteerPlayer 
 checkMovementKeyPressed ('d', True) p = steer p (- inputSteerPlayer)
 checkMovementKeyPressed _ gstate = gstate
-
 
 newBullet :: GameState -> Int -> Maybe Bullet
 newBullet gstate r 
@@ -41,7 +54,7 @@ newBullet gstate r
   where
     as = aliens gstate
     (i, _) = randomR (0, alienBulletOdds) (mkStdGen r)
-    -- every alien has 1 / 100 probability to shoot
+    -- every alien has 1 / 100 probability to shoot (max 1 per function call)
 
 steer :: Player -> Float -> Player
 steer p angle = p { lookDirection = rotateV angle (lookDirection p) } -- steer lookDirection 'angle' degrees in direction 'd'

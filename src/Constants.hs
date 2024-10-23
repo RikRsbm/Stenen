@@ -97,11 +97,20 @@ alienSpeed = 120
 alienScoreMultiplier :: Int
 alienScoreMultiplier = 4
 
-bigUpdatesPerStep :: Float
-bigUpdatesPerStep = 60
+bigUpdatesPerSec :: Float
+bigUpdatesPerSec = 60
 
 timePerImplosionFrame :: Float
 timePerImplosionFrame = 0.1
+
+timePerBoostFrame :: Float
+timePerBoostFrame = 0.05
+
+boostBmpSize :: Float
+boostBmpSize = 15
+
+boostBmpScale :: Float
+boostBmpScale = 0.7 * playerRadius / boostBmpSize
 
 
 -- speeds are in pixels/sec
