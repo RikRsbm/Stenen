@@ -19,10 +19,7 @@ step :: Float -> GameState -> IO GameState
 step secs gstate
     | status gstate == FirstStep = readHighscore gstate
     | status gstate == GameOver || status gstate == Paused || status gstate == PreStart = return gstate
-    | any (pColliding p) (filter ((== Alive) . sState) (stenen gstate)) ||
-      any (pColliding p) (aliens gstate) ||
-      any (pColliding p) (alienBullets gstate)
-        = finishGame gstate
+    | playerGetsHit = finishGame gstate
     | elapsedTime gstate + secs > 1 / bigUpdatesPerSec 
         = do r <- randomIO
              return $ updateEveryStep secs (updatePerTimeUnit r (gstate { elapsedTime = elapsedTime gstate + secs - 1 / bigUpdatesPerSec}))
@@ -30,8 +27,11 @@ step secs gstate
     | otherwise 
         = return $ updateEveryStep secs (gstate { elapsedTime = elapsedTime gstate + secs })
   where 
+    playerGetsHit = any (pColliding p) (filter ((== Alive) . sState) (stenen gstate)) ||
+                    any (pColliding p) (aliens gstate) ||
+                    any (pColliding p) (alienBullets gstate)
     p = player gstate
-    gstateNew = updateEveryStep secs gstate
+
 
 readHighscore :: GameState -> IO GameState
 readHighscore gstate

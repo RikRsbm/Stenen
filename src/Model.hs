@@ -98,7 +98,7 @@ data BoostState = NotBoosting
 data ZeroToTwo = Zero2 | One2 | Two2
                  deriving (Show, Eq, Enum)
 
-data BulletColor = Red | LightPink deriving (Show, Eq)
+data BulletColor = Yellow | Pink deriving (Show, Eq)
 
 
 
@@ -108,14 +108,14 @@ class CanShoot a where
 
 instance CanShoot Player where
     shootBullet :: Player -> GameState -> Bullet
-    shootBullet p _ = Bullet loc vec Red
+    shootBullet p _ = Bullet loc vec Yellow
       where 
         loc = location p `addVecToPt` (playerRadius `mulSV` lookDirection p) -- make sure bullet starts at point of player
         vec = (playerBulletSpeed `mulSV` lookDirection p ) `addVec` velocity p
 
 instance CanShoot Alien where
     shootBullet :: Alien -> GameState -> Bullet
-    shootBullet a gstate = Bullet loc vec LightPink
+    shootBullet a gstate = Bullet loc vec Pink
       where
         loc = location a `addVec` ((radius a / 2) `mulSV` normalizeV vec)
         vec = alienBulletSpeed `mulSV` normalizeV (location (player gstate) `subVec` location a) 

@@ -79,9 +79,6 @@ alienOdds = 400
 alienBulletOdds :: Int
 alienBulletOdds = 100
 
-lightPink :: Color
-lightPink = makeColor 1.0 0.7 0.8 1.0
-
 ufoScale :: Float
 ufoScale = 2 * alienRadius / ufoBmpSize
 
@@ -111,6 +108,24 @@ boostBmpSize = 15
 
 boostBmpScale :: Float
 boostBmpScale = 0.7 * playerRadius / boostBmpSize
+
+textColor :: Color
+textColor = lightBlue
+
+playerColor :: Color
+playerColor = darkYellow
+
+pink :: Color
+pink = makeColor 1 0.31 0.95 1
+
+lightBlue :: Color
+lightBlue = makeColor 0.5 0.5 1 1
+
+darkYellow :: Color
+darkYellow = makeColor 0.83 0.83 0 1
+
+lightGray :: Color
+lightGray = makeColor 0.9 0.9 0.9 1
 
 
 -- speeds are in pixels/sec

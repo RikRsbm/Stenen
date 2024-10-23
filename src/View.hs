@@ -48,11 +48,11 @@ instance Viewable Player where
         d@(dx, dy) = lookDirection p
         (dx', dy') = rotateV (pi / 2) d
 
-        lineBack  = color green (line [(x - pDx - pDx', y - pDy - pDy'),
+        lineBack  = color playerColor (line [(x - pDx - pDx', y - pDy - pDy'),
                                       (x - pDx + pDx', y - pDy + pDy')])
-        lineLeft  = color green (line [(x - pDx + pDx', y - pDy + pDy'),
+        lineLeft  = color playerColor (line [(x - pDx + pDx', y - pDy + pDy'),
                                       (x + pDx       , y + pDy       )])
-        lineRight = color green (line [(x - pDx - pDx', y - pDy - pDy'),
+        lineRight = color playerColor (line [(x - pDx - pDx', y - pDy - pDy'),
                                       (x + pDx       , y + pDy       )])
         pDx = playerRadius * dx
         pDy = playerRadius * dy
@@ -82,7 +82,7 @@ instance Viewable Steen where
         (x, y) = location s
         sc = 2 * radius s / implosionBmpSize
 
-    mkPicture _ s = translate x y (color white (circle (radius s))) -- it's still alive
+    mkPicture _ s = translate x y (color lightGray (circle (radius s))) -- it's still alive
       where (x, y) = location s
 
 instance Viewable Alien where
@@ -95,8 +95,8 @@ instance Viewable Bullet where
     mkPicture _ b = translate x y (color c (circle bulletRadius))
       where 
         (x, y) = location b
-        c | bColor b == Red = red
-          | otherwise       = lightPink
+        c | bColor b == Yellow = playerColor
+          | otherwise          = pink
 
 
 
@@ -104,19 +104,19 @@ instance Viewable Bullet where
 
 
 viewScore :: Int -> Picture
-viewScore s = viewText (250, 250) smallTextScale blue ("Score: " ++ show s)
+viewScore s = viewText (250, 250) smallTextScale textColor ("Score: " ++ show s)
 
 viewHighscore :: Int -> Picture
-viewHighscore s = translate 190 210 (scale smallTextScale smallTextScale (color blue (text ("Highscore: " ++ show s))))
+viewHighscore s = translate 190 210 (scale smallTextScale smallTextScale (color textColor (text ("Highscore: " ++ show s))))
 
 viewStatus :: Status -> Picture
-viewStatus PreStart = pictures [viewText (explanationX, 200) bigTextScale blue "W to boost"
-                              , viewText (explanationX, 140) bigTextScale blue "A, D to steer"
-                              , viewText (explanationX, 80) bigTextScale blue "Enter to shoot"
-                              , viewText (explanationX, 20) bigTextScale blue "Esc to pause"
-                              , viewText (-150, statusY) bigTextScale blue "W to start"]
-viewStatus Paused = viewText (-300, statusY) bigTextScale blue "paused, Esc to resume"
-viewStatus GameOver = viewText (-320, statusY) bigTextScale blue "Game over, R to restart"
+viewStatus PreStart = pictures [viewText (explanationX, 200) bigTextScale textColor "W to boost"
+                              , viewText (explanationX, 140) bigTextScale textColor "A, D to steer"
+                              , viewText (explanationX, 80) bigTextScale textColor "Enter to shoot"
+                              , viewText (explanationX, 20) bigTextScale textColor "Esc to pause"
+                              , viewText (-150, statusY) bigTextScale textColor "W to start"]
+viewStatus Paused = viewText (-300, statusY) bigTextScale textColor "paused, Esc to resume"
+viewStatus GameOver = viewText (-320, statusY) bigTextScale textColor "Game over, R to restart"
 viewStatus _ = Blank
 
 viewText :: Point -> Float -> Color -> String -> Picture
