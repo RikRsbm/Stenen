@@ -26,10 +26,11 @@ data GameState = GameState {
                  , elapsedTime :: Float
                  , ufoPic :: Picture
                  , steenAnimPics :: [Picture]
+                 , ufoAnimPics :: [Picture]
                  , boostAnimPics :: [Picture]
                  }
 
-initialState :: Picture -> [Picture] -> [Picture] -> GameState
+initialState :: Picture -> [Picture] -> [Picture] -> [Picture] -> GameState
 initialState = GameState (Player (0, 0) 
                                  (0, 0) 
                                  (0, lookDirectionVecMagnitude)
@@ -70,12 +71,13 @@ data Steen = Steen {
                sLocation :: Point -- location of asteroid
              , sVelocity :: Vector -- velocity of asteroid
              , sRadius :: Float -- radius of asteroid
-             , sState :: SteenState -- state of the animation
+             , sState :: ExplosionState -- state of the animation
              } 
 
 data Alien = Alien {
-               aLocation :: Point
-             , aVelocity :: Vector
+               aLocation :: Point -- location of alien
+             , aVelocity :: Vector -- velocity of alien
+             , aState :: ExplosionState -- state of the animation
              }
 
 data Bullet = Bullet {
@@ -84,7 +86,7 @@ data Bullet = Bullet {
               , bColor :: BulletColor -- color of Bullet
               }
 
-data SteenState = Alive 
+data ExplosionState = Alive 
                 | ExplosionState ZeroToFour Float -- which state, how many seconds has it been at this state
                 deriving (Show, Eq)
 
@@ -242,7 +244,7 @@ instance CanCollideWithPlayer Alien where
 
 class CanCollideWithPlayerBullet a where
     bColliding :: a -> Bullet -> Bool
-    removeColliding :: Float -> GameState -> [a] -> ([a], Int)
+    checkCollisionsAndUpdateAnims :: Float -> GameState -> [a] -> ([a], Int)
 
 instance CanCollideWithPlayerBullet Steen where
     bColliding :: Steen -> Bullet -> Bool
@@ -253,8 +255,8 @@ instance CanCollideWithPlayerBullet Steen where
         (x, y) = location b
         (p, q) = location s
 
-    removeColliding :: Float -> GameState -> [Steen] -> ([Steen], Int)
-    removeColliding secs gstate ss = (exploded' ++ collided' ++ nonCollided, length collided)
+    checkCollisionsAndUpdateAnims :: Float -> GameState -> [Steen] -> ([Steen], Int)
+    checkCollisionsAndUpdateAnims secs gstate ss = (exploded' ++ collided' ++ nonCollided, length collided)
       where 
         (notExploded, exploded) = partition ((== Alive) . sState) ss
         (collided, nonCollided) = partition (\s -> any (bColliding s) (bullets gstate)) notExploded
@@ -279,9 +281,22 @@ instance CanCollideWithPlayerBullet Alien where
         (x, y) = location b
         (p, q) = location a
 
-    removeColliding :: Float -> GameState -> [Alien] -> ([Alien], Int)
-    removeColliding secs gstate as = (nonCollidedAs, length as - length nonCollidedAs)
-      where nonCollidedAs = filter (\a -> not (any (bColliding a) (bullets gstate))) as
+    checkCollisionsAndUpdateAnims :: Float -> GameState -> [Alien] -> ([Alien], Int)
+    checkCollisionsAndUpdateAnims secs gstate as = (exploded' ++ collided' ++ nonCollided, length collided)
+      where 
+        (notExploded, exploded) = partition ((== Alive) . aState) as
+        (collided, nonCollided) = partition (\a -> any (bColliding a) (bullets gstate)) notExploded
+        collided' = mapMaybe (updateUfoAnimation secs) collided
+        exploded' = mapMaybe (updateUfoAnimation secs) exploded
+
+updateUfoAnimation :: Float -> Alien -> Maybe Alien
+updateUfoAnimation secs a@(Alien { aState = (ExplosionState frame time) })
+    | time + secs > timePerImplosionFrame = case frame of 
+        Four4 -> Nothing
+        _     -> Just $ a { aState = ExplosionState (succ frame) (time + secs - timePerImplosionFrame ) }
+    | otherwise = Just $ a { aState = ExplosionState frame (time + secs) }
+updateUfoAnimation secs a@(Alien { aState = Alive })
+    = Just $ a { aState = ExplosionState Zero4 0 }
 
 
 
@@ -289,7 +304,7 @@ instance CanCollideWithPlayerBullet Alien where
 
 
 
-class (TempObject a, CanCollideWithPlayerBullet a) => RandomObject a where
+class (TempObject a) => RandomObject a where
     perhapsCreateNew :: GameState -> Int -> Maybe a    
     
 instance RandomObject Steen where
@@ -319,7 +334,7 @@ instance RandomObject Steen where
 instance RandomObject Alien where -- we don't use gstate yet, we might in the future (so that it can move towards the player or something like that)
     perhapsCreateNew :: GameState -> Int -> Maybe Alien
     perhapsCreateNew _ seed 
-        | creationOdds == 0 = Just (Alien (x, y) (dx, dy))
+        | creationOdds == 0 = Just (Alien (x, y) (dx, dy) Alive)
         | otherwise         = Nothing
       where
         gen = mkStdGen seed

@@ -28,7 +28,7 @@ step secs gstate
         = return $ updateEveryStep secs (gstate { elapsedTime = elapsedTime gstate + secs })
   where 
     playerGetsHit = any (pColliding p) (filter ((== Alive) . sState) (stenen gstate)) ||
-                    any (pColliding p) (aliens gstate) ||
+                    any (pColliding p) (filter ((== Alive) . aState) (aliens gstate)) ||
                     any (pColliding p) (alienBullets gstate)
     p = player gstate
 
@@ -50,15 +50,15 @@ updateEveryStep secs gstate
     = gstate 
         {
           player = updateBoostAnimation secs (pCheckBounds (glide secs (player gstate)))
-        , stenen = updateLocations secs remainingStenen -- zorgen dat geschoten stenen naar ander frame gaan
+        , stenen = updateLocations secs remainingStenen
         , bullets = updateLocations secs (bullets gstate)
         , aliens = updateLocations secs remainingAliens
         , alienBullets = updateLocations secs (alienBullets gstate)
-        , score = score gstate + steenScoreMultiplier * stenenShot + alienScoreMultiplier * aliensShot 
+        , score = score gstate + steenScoreMultiplier * nrStenenShot + alienScoreMultiplier * nrAliensShot 
         }
   where 
-    (remainingStenen, stenenShot) = removeColliding secs gstate (stenen gstate) -- also handles animation updates if frame time has been exceeded
-    (remainingAliens, aliensShot) = removeColliding secs gstate (aliens gstate)
+    (remainingStenen, nrStenenShot) = checkCollisionsAndUpdateAnims secs gstate (stenen gstate) 
+    (remainingAliens, nrAliensShot) = checkCollisionsAndUpdateAnims secs gstate (aliens gstate)
 
 updatePerTimeUnit :: Int -> GameState -> GameState
 updatePerTimeUnit r gstate
@@ -83,7 +83,7 @@ input e gstate = return (inputKey e gstate)
 
 inputKey :: Event -> GameState -> GameState
 inputKey (EventKey (Char 'r') Down _ _) gstate@(GameState { status = GameOver }) 
-    = initialState (ufoPic gstate) (steenAnimPics gstate) (boostAnimPics gstate)
+    = initialState (ufoPic gstate) (steenAnimPics gstate) (ufoAnimPics gstate) (boostAnimPics gstate)
 
 inputKey k@(EventKey (Char 'w') Down _ _) gstate@(GameState { status = PreStart }) -- if w is pressed for the first time, start the game and call inputkey again to move forward
     = inputKey k (gstate { status = Running })

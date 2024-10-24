@@ -109,11 +109,17 @@ boostBmpSize = 15
 boostBmpScale :: Float
 boostBmpScale = 0.7 * playerRadius / boostBmpSize
 
+
+
+
 textColor :: Color
 textColor = lightBlue
 
 playerColor :: Color
 playerColor = darkYellow
+
+
+
 
 pink :: Color
 pink = makeColor 1 0.31 0.95 1

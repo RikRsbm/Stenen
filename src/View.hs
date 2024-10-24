@@ -87,7 +87,13 @@ instance Viewable Steen where
 
 instance Viewable Alien where
     mkPicture :: GameState -> Alien -> Picture
-    mkPicture gstate a = translate x y (ufoPic gstate)
+
+    mkPicture  gstate a@(Alien { aState = ExplosionState i _ }) 
+        = translate x y (ufoAnimPics gstate !! fromEnum i)
+      where 
+        (x, y) = location a
+
+    mkPicture gstate a = translate x y (ufoPic gstate) -- it's still alive
       where (x, y) = location a
 
 instance Viewable Bullet where
