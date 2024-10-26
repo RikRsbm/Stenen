@@ -7,7 +7,6 @@ import Graphics.Gloss.Data.Vector
 import General 
 import System.Random 
 import Data.Maybe
-import Data.IntMap (update)
 
 
 
