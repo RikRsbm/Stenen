@@ -49,7 +49,7 @@ updateEveryStep :: Float -> GameState -> GameState
 updateEveryStep secs gstate 
     = gstate 
         {
-          player = updateBoostAnimation secs (pCheckBounds (glide secs (player gstate)))
+          player = updateAnim secs (pCheckBounds (glide secs (player gstate)))
         , stenen = updateLocations secs remainingStenen
         , bullets = updateLocations secs (bullets gstate)
         , aliens = updateLocations secs remainingAliens
@@ -57,8 +57,8 @@ updateEveryStep secs gstate
         , score = score gstate + steenScoreMultiplier * nrStenenShot + alienScoreMultiplier * nrAliensShot 
         }
   where 
-    (remainingStenen, nrStenenShot) = checkCollisionsAndUpdateAnims secs gstate (stenen gstate) 
-    (remainingAliens, nrAliensShot) = checkCollisionsAndUpdateAnims secs gstate (aliens gstate)
+    (remainingStenen, nrStenenShot) = checkBulletHitsAndUpdateAnims secs gstate (stenen gstate) 
+    (remainingAliens, nrAliensShot) = checkBulletHitsAndUpdateAnims secs gstate (aliens gstate)
 
 updatePerTimeUnit :: Int -> GameState -> GameState
 updatePerTimeUnit r gstate

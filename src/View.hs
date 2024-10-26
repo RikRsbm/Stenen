@@ -82,7 +82,7 @@ instance Viewable Steen where
         (x, y) = location s
         sc = 2 * radius s / implosionBmpSize
 
-    mkPicture _ s = translate x y (color lightGray (circle (radius s))) -- it's still alive
+    mkPicture _ s = translate x y (color steenColor (circle (radius s))) -- it's still alive
       where (x, y) = location s
 
 instance Viewable Alien where
@@ -101,8 +101,8 @@ instance Viewable Bullet where
     mkPicture _ b = translate x y (color c (circle bulletRadius))
       where 
         (x, y) = location b
-        c | bColor b == Yellow = playerColor
-          | otherwise          = pink
+        c | bType b == FromPlayer = playerColor
+          | otherwise             = alienColor
 
 
 

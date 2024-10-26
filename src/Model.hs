@@ -7,6 +7,7 @@ import Graphics.Gloss.Data.Vector
 import General 
 import System.Random 
 import Data.Maybe
+import Data.IntMap (update)
 
 
 
@@ -71,36 +72,37 @@ data Steen = Steen {
                sLocation :: Point -- location of asteroid
              , sVelocity :: Vector -- velocity of asteroid
              , sRadius :: Float -- radius of asteroid
-             , sState :: ExplosionState -- state of the animation
+             , sState :: State -- state of the animation
              } 
 
 data Alien = Alien {
                aLocation :: Point -- location of alien
              , aVelocity :: Vector -- velocity of alien
-             , aState :: ExplosionState -- state of the animation
+             , aState :: State -- state of the animation
              }
 
 data Bullet = Bullet {
                 bLocation :: Point -- location of bullet
               , bVelocity :: Vector -- velocity of bullet
-              , bColor :: BulletColor -- color of Bullet
+              , bType :: BulletType -- color of Bullet
               }
 
-data ExplosionState = Alive 
-                | ExplosionState ZeroToFour Float -- which state, how many seconds has it been at this state
-                deriving (Show, Eq)
+data State = Alive 
+           | ExplosionState ZeroToFour Float -- which state, how many seconds has it been at this state
+           | Dead
+           deriving (Show, Eq)
 
 data ZeroToFour = Zero4 | One4 | Two4 | Three4 | Four4
-                  deriving (Show, Eq, Enum)
+                  deriving (Show, Eq, Enum, Bounded)
 
 data BoostState = NotBoosting
                 | BoostFrame ZeroToTwo Float -- which frame, how many seconds it has been at this frame
                 deriving (Show, Eq)
 
 data ZeroToTwo = Zero2 | One2 | Two2
-                 deriving (Show, Eq, Enum)
+                 deriving (Show, Eq, Enum, Bounded)
 
-data BulletColor = Yellow | Pink deriving (Show, Eq)
+data BulletType = FromPlayer | FromAlien deriving (Show, Eq)
 
 
 
@@ -110,14 +112,14 @@ class CanShoot a where
 
 instance CanShoot Player where
     shootBullet :: Player -> GameState -> Bullet
-    shootBullet p _ = Bullet loc vec Yellow
+    shootBullet p _ = Bullet loc vec FromPlayer
       where 
         loc = location p `addVecToPt` (playerRadius `mulSV` lookDirection p) -- make sure bullet starts at point of player
         vec = (playerBulletSpeed `mulSV` lookDirection p ) `addVec` velocity p
 
 instance CanShoot Alien where
     shootBullet :: Alien -> GameState -> Bullet
-    shootBullet a gstate = Bullet loc vec Pink
+    shootBullet a gstate = Bullet loc vec FromAlien
       where
         loc = location a `addVec` ((radius a / 2) `mulSV` normalizeV vec)
         vec = alienBulletSpeed `mulSV` normalizeV (location (player gstate) `subVec` location a) 
@@ -242,11 +244,19 @@ instance CanCollideWithPlayer Alien where
 
 
 
-class CanCollideWithPlayerBullet a where
+class HasAnimation a => CanGetHitByPlayerBullet a where
     bColliding :: a -> Bullet -> Bool
-    checkCollisionsAndUpdateAnims :: Float -> GameState -> [a] -> ([a], Int)
+    state :: a -> State
+    
+    checkBulletHitsAndUpdateAnims :: Float -> GameState -> [a] -> ([a], Int)
+    checkBulletHitsAndUpdateAnims secs gstate xs = (alive ++ wereAlreadyDying' ++ newDying', length newDying)
+      where 
+        (wereAlive, wereAlreadyDying) = partition ((== Alive) . state) xs
+        (newDying, alive) = partition (\x -> any (bColliding x) (bullets gstate)) wereAlive
+        wereAlreadyDying' = filter ((/= Dead) . state) $ map (updateAnim secs) wereAlreadyDying
+        newDying' = map (updateAnim secs) newDying
 
-instance CanCollideWithPlayerBullet Steen where
+instance CanGetHitByPlayerBullet Steen where
     bColliding :: Steen -> Bullet -> Bool
     bColliding s b  
         | magV (x - p, y - q) < radius s + radius b = True
@@ -255,24 +265,10 @@ instance CanCollideWithPlayerBullet Steen where
         (x, y) = location b
         (p, q) = location s
 
-    checkCollisionsAndUpdateAnims :: Float -> GameState -> [Steen] -> ([Steen], Int)
-    checkCollisionsAndUpdateAnims secs gstate ss = (exploded' ++ collided' ++ nonCollided, length collided)
-      where 
-        (notExploded, exploded) = partition ((== Alive) . sState) ss
-        (collided, nonCollided) = partition (\s -> any (bColliding s) (bullets gstate)) notExploded
-        collided' = mapMaybe (updateSteenAnimation secs) collided
-        exploded' = mapMaybe (updateSteenAnimation secs) exploded
+    state :: Steen -> State
+    state = sState
 
-updateSteenAnimation :: Float -> Steen -> Maybe Steen
-updateSteenAnimation secs s@(Steen { sState = (ExplosionState frame time) })
-    | time + secs > timePerImplosionFrame = case frame of 
-        Four4 -> Nothing
-        _     -> Just $ s { sState = ExplosionState (succ frame) (time + secs - timePerImplosionFrame ) }
-    | otherwise = Just $ s { sState = ExplosionState frame (time + secs) }
-updateSteenAnimation secs s@(Steen { sState = Alive })
-    = Just $ s { sState = ExplosionState Zero4 0 }
-
-instance CanCollideWithPlayerBullet Alien where
+instance CanGetHitByPlayerBullet Alien where
     bColliding :: Alien -> Bullet -> Bool
     bColliding a b  
         | magV (x - p, y - q) < radius a / 2 + radius b = True -- /2 so that you have to hit the center of the alien, you can shoot over or under it and hit it
@@ -281,24 +277,8 @@ instance CanCollideWithPlayerBullet Alien where
         (x, y) = location b
         (p, q) = location a
 
-    checkCollisionsAndUpdateAnims :: Float -> GameState -> [Alien] -> ([Alien], Int)
-    checkCollisionsAndUpdateAnims secs gstate as = (exploded' ++ collided' ++ nonCollided, length collided)
-      where 
-        (notExploded, exploded) = partition ((== Alive) . aState) as
-        (collided, nonCollided) = partition (\a -> any (bColliding a) (bullets gstate)) notExploded
-        collided' = mapMaybe (updateUfoAnimation secs) collided
-        exploded' = mapMaybe (updateUfoAnimation secs) exploded
-
-updateUfoAnimation :: Float -> Alien -> Maybe Alien
-updateUfoAnimation secs a@(Alien { aState = (ExplosionState frame time) })
-    | time + secs > timePerImplosionFrame = case frame of 
-        Four4 -> Nothing
-        _     -> Just $ a { aState = ExplosionState (succ frame) (time + secs - timePerImplosionFrame ) }
-    | otherwise = Just $ a { aState = ExplosionState frame (time + secs) }
-updateUfoAnimation secs a@(Alien { aState = Alive })
-    = Just $ a { aState = ExplosionState Zero4 0 }
-
-
+    state :: Alien -> State
+    state = aState
 
 
 
@@ -350,3 +330,44 @@ instance RandomObject Alien where -- we don't use gstate yet, we might in the fu
                           _ -> (halfWidthFloat   + alienRadius, fromIntegral randomY           , - alienSpeed, 0           )
 
         r = round alienRadius
+
+
+
+
+
+class HasAnimation a where
+    updateAnim :: Float -> a -> a
+
+instance HasAnimation Player where
+    updateAnim :: Float -> Player -> Player
+    updateAnim secs p@(Player { boostState = BoostFrame x time }) 
+        | time + secs > timePerBoostFrame = p { boostState = BoostFrame (case x of 
+                                                                         Two2 -> Zero2
+                                                                         other -> succ other) 
+                                                            (time + secs - timePerBoostFrame) }
+        | otherwise                       = p { boostState = BoostFrame x (time + secs) }
+    updateAnim secs p = p -- not boosting
+
+instance HasAnimation Steen where
+    updateAnim :: Float -> Steen -> Steen
+    updateAnim secs s@(Steen { sState = (ExplosionState frame time) })
+        | time + secs > timePerSteenImplosionFrame
+            = s { sState = case frame of 
+                           x | x == maxBound -> Dead
+                           other             -> ExplosionState (succ other) (time + secs - timePerSteenImplosionFrame) }
+        | otherwise 
+            = s { sState = ExplosionState frame (time + secs) }
+    updateAnim secs s@(Steen { sState = Alive })
+        = s { sState = ExplosionState minBound 0 }
+
+instance HasAnimation Alien where
+    updateAnim :: Float -> Alien -> Alien
+    updateAnim secs a@(Alien { aState = (ExplosionState frame time) })
+        | time + secs > timePerAlienImplosionFrame 
+            = a { aState = case frame of 
+                           x | x == maxBound -> Dead
+                           other             -> ExplosionState (succ other) (time + secs - timePerAlienImplosionFrame) }
+        | otherwise 
+            = a { aState = ExplosionState frame (time + secs) }
+    updateAnim secs a@(Alien { aState = Alive })
+        = a { aState = ExplosionState minBound 0 }

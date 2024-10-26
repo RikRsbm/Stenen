@@ -97,8 +97,11 @@ alienScoreMultiplier = 4
 bigUpdatesPerSec :: Float
 bigUpdatesPerSec = 60
 
-timePerImplosionFrame :: Float
-timePerImplosionFrame = 0.1
+timePerSteenImplosionFrame :: Float
+timePerSteenImplosionFrame = 0.1
+
+timePerAlienImplosionFrame :: Float
+timePerAlienImplosionFrame = 0.1
 
 timePerBoostFrame :: Float
 timePerBoostFrame = 0.05
@@ -117,6 +120,12 @@ textColor = lightBlue
 
 playerColor :: Color
 playerColor = darkYellow
+
+alienColor :: Color
+alienColor = pink
+
+steenColor :: Color
+steenColor = lightGray
 
 
 
