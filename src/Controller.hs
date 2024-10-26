@@ -36,13 +36,16 @@ step secs gstate
 readHighscore :: GameState -> IO GameState
 readHighscore gstate
     = do text <- readFile highscorePath
-         let oldHs = readMaybe (takeWhile (/= '\n') text)
-         return $ gstate { status = PreStart, highscore = fromMaybe 0 oldHs }
+         let scores = lines text
+         return $ gstate { status = PreStart, 
+                           highscore = case length scores of
+                                       0 -> 0
+                                       _ -> fromMaybe 0 (readMaybe (last scores)) } 
 
 finishGame :: GameState -> IO GameState
 finishGame gstate
-    = do when (score gstate > highscore gstate)
-           $ writeFile highscorePath (show (score gstate))
+    = do when (score gstate > highscore gstate)   
+             $ appendFile highscorePath (show (score gstate) ++ "\n") 
          return $ gstate { status = GameOver}
 
 updateEveryStep :: Float -> GameState -> GameState
