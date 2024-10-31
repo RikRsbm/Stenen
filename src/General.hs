@@ -7,6 +7,14 @@ import Graphics.Gloss (Vector, Point)
 
 
 
+data Button = Button {
+                butLocation :: Point
+              , butSize :: Point
+              , butText :: String
+              }
+              deriving Eq
+
+
 
 addVec :: Vector -> Vector -> Vector
 addVec (dx, dy) (dx', dy') = (dx + dx',

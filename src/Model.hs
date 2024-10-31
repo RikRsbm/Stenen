@@ -11,20 +11,25 @@ import Data.Maybe
 
 
 
-data GameState = GameState {
-                   player :: Player 
+data GameState = GameState { 
+                   player :: Player
+                 , player2 :: Maybe Player 
                  , stenen :: [Steen] -- list of onscreen asteroids
                  , bullets :: [Bullet] -- list of onscreen bullets
                  , aliens :: [Alien] -- list of onscreen aliens
                  , alienBullets :: [Bullet] -- list of onscreen bullets from the alien
-                 , wPressed :: Bool -- is 'w' pressed
-                 , aPressed :: Bool -- is 'a' pressed?
-                 , dPressed :: Bool -- is 'd' pressed?
                  , status :: Status -- status of game
                  , score :: Int -- current score
                  , highscore :: Int -- all time highscore (gets loaded in at start of game)
                  , elapsedTime :: Float
                  , ufoPic :: Picture
+                 , steenAnimPics :: [Picture]
+                 , ufoAnimPics :: [Picture]
+                 , boostAnimPics :: [Picture]
+                 }
+                 | 
+                 Menu {             
+                   ufoPic :: Picture
                  , steenAnimPics :: [Picture]
                  , ufoAnimPics :: [Picture]
                  , boostAnimPics :: [Picture]
@@ -35,20 +40,20 @@ initialState = GameState (Player (0, 0)
                                  (0, 0) 
                                  (0, lookDirectionVecMagnitude)
                                  NotBoosting
+                                 player1Color
+                                 False
+                                 False
+                                 False
                          ) 
+                         Nothing
                          []
                          []
                          []
                          []
-                         False
-                         False
-                         False
                          FirstStep
                          0
                          0
                          0
-
-
 
 
 
@@ -65,7 +70,12 @@ data Player = Player {
               , pVelocity :: Vector -- velocity of player
               , lookDirection :: Vector -- direction that player is looking in, it's a vector of constant magnitude
               , boostState :: BoostState -- is the player boosting? if so, which boost frame, and how long has it been shown?
+              , pColor :: Color
+              , forwardPressed :: Bool
+              , leftPressed :: Bool
+              , rightPressed :: Bool
               } 
+              deriving Eq
 
 data Steen = Steen { 
                sLocation :: Point -- location of asteroid
@@ -83,7 +93,7 @@ data Alien = Alien {
 data Bullet = Bullet {
                 bLocation :: Point -- location of bullet
               , bVelocity :: Vector -- velocity of bullet
-              , bType :: BulletType -- color of Bullet
+              , bColor :: Color -- color of Bullet
               }
 
 data State = Alive 
@@ -103,6 +113,7 @@ data ZeroToTwo = Zero2 | One2 | Two2
 
 data BulletType = FromPlayer | FromAlien deriving (Show, Eq)
 
+data Direction = Forward | Left | Right
 
 
 
@@ -111,14 +122,15 @@ class CanShoot a where
 
 instance CanShoot Player where
     shootBullet :: Player -> GameState -> Bullet
-    shootBullet p _ = Bullet loc vec FromPlayer
+    shootBullet p gstate = Bullet loc vec (pColor p)
       where 
         loc = location p `addVecToPt` (playerRadius `mulSV` lookDirection p) -- make sure bullet starts at point of player
         vec = (playerBulletSpeed `mulSV` lookDirection p ) `addVec` velocity p
+    
 
 instance CanShoot Alien where
     shootBullet :: Alien -> GameState -> Bullet
-    shootBullet a gstate = Bullet loc vec FromAlien
+    shootBullet a gstate = Bullet loc vec alienColor
       where
         loc = location a `addVec` ((radius a / 2) `mulSV` normalizeV vec)
         vec = alienBulletSpeed `mulSV` normalizeV (location (player gstate) `subVec` location a) 

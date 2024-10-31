@@ -5,6 +5,8 @@ import General
 import Constants
 import Graphics.Gloss.Data.Vector
 import System.Random 
+import Data.Maybe (fromMaybe)
+import Graphics.Gloss (Point)
 
 
 
@@ -38,14 +40,34 @@ pCheckBounds p@(Player { pLocation = (x, y), pVelocity = (dx, dy) })
     width  = halfWidthFloat - radius p
     height = halfHeightFloat - radius p
  
-checkMovementKeyPressed :: (Char, Bool) -> Player -> Player
-checkMovementKeyPressed ('w', True) p = boost p
-checkMovementKeyPressed ('w', False) p@(Player { boostState = BoostFrame _ _ }) = p { boostState = NotBoosting }
-checkMovementKeyPressed ('a', True) p = steer p inputSteerPlayer 
-checkMovementKeyPressed ('d', True) p = steer p (- inputSteerPlayer)
+
+checkMovementKeysPressed :: Player -> Player
+checkMovementKeysPressed p = foldr checkMovementKeyPressed p keysPressed
+  where 
+    keysPressed = [(Forward, forwardPressed p), (Model.Left, leftPressed p), (Model.Right, rightPressed p)]
+
+checkMovementKeyPressed :: (Direction, Bool) -> Player -> Player
+checkMovementKeyPressed (Forward, True) p = boost p
+checkMovementKeyPressed (Forward, False) p@(Player { boostState = BoostFrame _ _ }) = p { boostState = NotBoosting }
+checkMovementKeyPressed (Model.Left, True) p = steer p inputSteerPlayer 
+checkMovementKeyPressed (Model.Right, True) p = steer p (- inputSteerPlayer)
 checkMovementKeyPressed _ gstate = gstate
 
 
+
+
+aPlayerHitsSomething :: GameState -> Bool
+aPlayerHitsSomething gstate = thisPlayerHitsSomething gstate (player gstate) ||
+                              case player2 gstate of
+                              Just p -> thisPlayerHitsSomething gstate p
+                              _      -> False
+
+thisPlayerHitsSomething :: GameState -> Player -> Bool
+thisPlayerHitsSomething gstate p = any (pColliding p) (filter ((== Alive) . sState) (stenen gstate)) ||
+                                   any (pColliding p) (filter ((== Alive) . aState) (aliens gstate)) ||
+                                   any (pColliding p) (alienBullets gstate)
+
+                                   
 
 
 
@@ -57,3 +79,15 @@ newBullet gstate r
     as = filter ((== Alive) . aState) (aliens gstate)
     (i, _) = randomR (0, alienBulletOdds) (mkStdGen r)
     -- every alien has 1 / alienBulletsOdds probability to shoot (max 1 per function call)
+
+
+
+withinButtonBounds :: Point -> Button -> Bool
+withinButtonBounds (x,y) but = x > x' - halfW && x < x' + halfW
+                            && y > y' - halfH && y < y' + halfH
+  where 
+    (x', y') = butLocation but
+    (halfW, halfH) = 0.5 `mulSV` butSize but 
+
+
+

@@ -20,7 +20,7 @@ main = do ufoPic <- loadBMP "Pictures/Ufo.bmp"
           playIO (InWindow "Stenen" (screenWidth, screenHeight) (0, 0)) 
                   black                                                           -- Background color
                   144                                                             -- Frames per second, keep above bigUpdatesPerSec (= 60). Otherwise the true amount of bigUpdatesPerSec will become smaller than 60, making the game feel slower 
-                  (initialState ufoPic' steenAnimPics ufoAnimPics' boostAnimPics')-- Initial state
+                  (Menu ufoPic' steenAnimPics ufoAnimPics' boostAnimPics')        -- Initial state
                   view                                                            -- View function
                   input                                                           -- Event function
                   step                                                            -- Step function

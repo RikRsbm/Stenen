@@ -1,6 +1,7 @@
 module Constants where
     
 import Graphics.Gloss
+import General
 
 
 
@@ -118,8 +119,11 @@ boostBmpScale = 0.7 * playerRadius / boostBmpSize
 textColor :: Color
 textColor = lightBlue
 
-playerColor :: Color
-playerColor = darkYellow
+player1Color :: Color
+player1Color = darkYellow
+
+player2Color :: Color
+player2Color = orange
 
 alienColor :: Color
 alienColor = pink
@@ -141,6 +145,18 @@ darkYellow = makeColor 0.83 0.83 0 1
 
 lightGray :: Color
 lightGray = makeColor 0.9 0.9 0.9 1
+
+
+
+
+
+singleButton :: Button
+singleButton = Button (0, 100) buttonSize "Singleplayer"
+
+multiButton :: Button
+multiButton = Button (0, -100) buttonSize "Multiplayer"
+
+buttonSize = (350, 100)
 
 
 -- speeds are in pixels/sec

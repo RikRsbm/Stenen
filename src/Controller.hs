@@ -9,6 +9,8 @@ import System.Random
 import Data.Maybe
 import Control.Monad
 import Text.Read (readMaybe)
+import Data.List (find)
+import Graphics.Gloss.Data.Vector (mulSV)
 
 
 
@@ -16,21 +18,17 @@ import Text.Read (readMaybe)
 
 
 step :: Float -> GameState -> IO GameState
+step _ menu@(Menu {}) = return menu 
 step secs gstate
     | status gstate == FirstStep = readHighscore gstate
     | status gstate == GameOver || status gstate == Paused || status gstate == PreStart = return gstate
-    | playerGetsHit = finishGame gstate
+    | aPlayerHitsSomething gstate = finishGame gstate
     | elapsedTime gstate + secs > 1 / bigUpdatesPerSec 
         = do r <- randomIO
              return $ updateEveryStep secs (updatePerTimeUnit r (gstate { elapsedTime = elapsedTime gstate + secs - 1 / bigUpdatesPerSec}))
              -- ^ we choose this exact elapsedTime instead of 0 so that lower framerates don't unnecessarily put elapsedTime at 0 all the time (which makes everything slower)
     | otherwise 
         = return $ updateEveryStep secs (gstate { elapsedTime = elapsedTime gstate + secs })
-  where 
-    playerGetsHit = any (pColliding p) (filter ((== Alive) . sState) (stenen gstate)) ||
-                    any (pColliding p) (filter ((== Alive) . aState) (aliens gstate)) ||
-                    any (pColliding p) (alienBullets gstate)
-    p = player gstate
 
 
 readHighscore :: GameState -> IO GameState
@@ -52,7 +50,8 @@ updateEveryStep :: Float -> GameState -> GameState
 updateEveryStep secs gstate 
     = gstate 
         {
-          player = updateAnim secs (pCheckBounds (glide secs (player gstate)))
+          player = updatePlayer (player gstate)
+        , player2 = player2 gstate >>= Just . updatePlayer
         , stenen = updateLocations secs remainingStenen
         , bullets = updateLocations secs (bullets gstate)
         , aliens = updateLocations secs remainingAliens
@@ -62,18 +61,21 @@ updateEveryStep secs gstate
   where 
     (remainingStenen, nrStenenShot) = checkBulletHitsAndUpdateAnims secs gstate (stenen gstate) 
     (remainingAliens, nrAliensShot) = checkBulletHitsAndUpdateAnims secs gstate (aliens gstate)
+    updatePlayer = updateAnim secs . pCheckBounds . glide secs
 
 updatePerTimeUnit :: Int -> GameState -> GameState
 updatePerTimeUnit r gstate
     =  gstate
          {
-           player = pAutoDecceleration (foldr checkMovementKeyPressed (player gstate) keysPressed)
+           player = updatePlayer (player gstate)
+         , player2 = player2 gstate >>= Just . updatePlayer
          , stenen = addMaybe (perhapsCreateNew gstate r) (stenen gstate)
          , aliens = addMaybe (perhapsCreateNew gstate r) (aliens gstate)
          , alienBullets = addMaybe (newBullet gstate r) (alienBullets gstate)
          }
   where
-    keysPressed = [('w', wPressed gstate), ('a', aPressed gstate), ('d', dPressed gstate)]
+    keysPressed p = [('w', forwardPressed p), ('a', leftPressed p), ('d', rightPressed p)]
+    updatePlayer = pAutoDecceleration . checkMovementKeysPressed
 
 
 
@@ -84,30 +86,62 @@ updatePerTimeUnit r gstate
 input :: Event -> GameState -> IO GameState
 input e gstate = return (inputKey e gstate)
 
+
 inputKey :: Event -> GameState -> GameState
 inputKey (EventKey (Char 'r') Down _ _) gstate@(GameState { status = GameOver }) 
-    = initialState (ufoPic gstate) (steenAnimPics gstate) (ufoAnimPics gstate) (boostAnimPics gstate)
+    = Menu (ufoPic gstate) (steenAnimPics gstate) (ufoAnimPics gstate) (boostAnimPics gstate)
 
 inputKey k@(EventKey (Char 'w') Down _ _) gstate@(GameState { status = PreStart }) -- if w is pressed for the first time, start the game and call inputkey again to move forward
     = inputKey k (gstate { status = Running })
 
-inputKey (EventKey (SpecialKey KeyEnter) Down _ _) gstate@(GameState { status = Running })
+inputKey (EventKey (SpecialKey KeySpace) Down _ _) gstate@(GameState { status = Running })
     = gstate { bullets = bul : bullets gstate, score = score gstate - 1 }
   where bul = shootBullet (player gstate) gstate
+inputKey (EventKey (Char 'l') Down _ _) gstate@(GameState { status = Running, player2 = Just p })
+    = gstate { bullets = bul : bullets gstate, score = score gstate - 1 }
+  where bul = shootBullet p gstate
 
 inputKey (EventKey (SpecialKey KeyEsc) Down _ _) gstate@(GameState { status = Running })
     = gstate { status = Paused }
 inputKey (EventKey (SpecialKey KeyEsc) Down _ _) gstate@(GameState { status = Paused })
     = gstate { status = Running }
 
-inputKey (EventKey (Char 'w') Down _ _) gstate = gstate { wPressed = True }
-inputKey (EventKey (Char 'w') Up _ _) gstate = gstate { wPressed = False }
-inputKey (EventKey (Char 'a') Down _ _) gstate = gstate { aPressed = True }
-inputKey (EventKey (Char 'a') Up _ _) gstate = gstate { aPressed = False }
-inputKey (EventKey (Char 'd') Down _ _) gstate = gstate { dPressed = True }
-inputKey (EventKey (Char 'd') Up _ _) gstate = gstate {dPressed = False }
+inputKey (EventKey (Char 'w') Down _ _) gstate@(GameState {}) = gstate { player = (player gstate) { forwardPressed = True } }
+inputKey (EventKey (Char 'w') Up _ _)   gstate@(GameState {}) = gstate { player = (player gstate) { forwardPressed = False } }
+inputKey (EventKey (Char 'a') Down _ _) gstate@(GameState {}) = gstate { player = (player gstate) { leftPressed = True } }
+inputKey (EventKey (Char 'a') Up _ _)   gstate@(GameState {}) = gstate { player = (player gstate) { leftPressed = False } }
+inputKey (EventKey (Char 'd') Down _ _) gstate@(GameState {}) = gstate { player = (player gstate) { rightPressed = True } }
+inputKey (EventKey (Char 'd') Up _ _)   gstate@(GameState {}) = gstate { player = (player gstate) { rightPressed = False } }
 
--- inputKey (EventKey k Down _ _) gstate = gstate { keysPressed = insert k (keysPressed gstate)} -- for other keys
--- inputKey (EventKey k Up _ _)   gstate = gstate { keysPressed = delete k (keysPressed gstate)}
+inputKey (EventKey (Char 'u') Down _ _)  gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { forwardPressed = True } }
+inputKey (EventKey (Char 'u') Up _ _)    gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { forwardPressed = False } }
+inputKey (EventKey (Char 'h') Down _ _)  gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { leftPressed = True } }
+inputKey (EventKey (Char 'h') Up _ _)    gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { leftPressed = False } }
+inputKey (EventKey (Char 'k') Down _ _)  gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { rightPressed = True } }
+inputKey (EventKey (Char 'k') Up _ _)    gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { rightPressed = False } }
+
+inputKey (EventKey (MouseButton LeftButton) Down _ p) menu@(Menu {}) = newState
+  where
+    but = find (withinButtonBounds p) [singleButton, multiButton]
+
+    newState | but == Just singleButton = initState
+             | but == Just multiButton  = multState
+             | otherwise                = menu
+
+    initState = initialState (ufoPic menu) (steenAnimPics menu) (ufoAnimPics menu) (boostAnimPics menu)
+    multState = initState { player2 = Just (Player (0, -50) 
+                                           (0, 0) 
+                                           (0, lookDirectionVecMagnitude)
+                                           NotBoosting
+                                           player2Color
+                                           False
+                                           False
+                                           False
+                                           ) }
+
 inputKey _ gstate = gstate -- other key events (and events in general)
+
+
+
+
 
