@@ -1,18 +1,24 @@
 module General where
 
-import Graphics.Gloss (Vector, Point)
+
+import Graphics.Gloss 
+import Graphics.Gloss.Data.Vector (mulSV)
+import DataTypes
 
 
 
 
 
 
-data Button = Button {
-                butLocation :: Point
-              , butSize :: Point
-              , butText :: String
-              }
-              deriving Eq
+
+withinButtonBounds :: Point -> Button -> Bool
+withinButtonBounds (x,y) but = x > x' - halfW && x < x' + halfW
+                            && y > y' - halfH && y < y' + halfH
+  where 
+    (x', y') = butLocation but
+    (halfW, halfH) = 0.5 `mulSV` butSize but 
+
+
 
 
 
@@ -30,13 +36,7 @@ addVecToPt (x, y) (x', y') = (x + x',
 
 
 
-addMaybe :: Maybe a -> [a] -> [a]
-addMaybe Nothing xs = xs
-addMaybe (Just x) xs = x : xs
 
 
-partition :: (a -> Bool) -> [a] -> ([a], [a])
-partition _ []                 = ([],[])
-partition p (x:xs) | p x       = (x:ys, zs)
-                   | otherwise = (ys, x:zs)
-    where (ys, zs) = partition p xs
+viewText :: Point -> Float -> Color -> String -> Picture
+viewText (x, y) s c txt = translate x y (scale s s (color c (text txt)))
