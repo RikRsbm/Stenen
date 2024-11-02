@@ -67,18 +67,7 @@ thisPlayerHitsSomething gstate p = any (pColliding p) (filter ((== Alive) . sSta
                                    any (pColliding p) (filter ((== Alive) . aState) (aliens gstate)) ||
                                    any (pColliding p) (alienBullets gstate)
 
-                                   
 
-
-
-newBullet :: GameState -> Int -> Maybe Bullet
-newBullet gstate r 
-    | i < length as = Just (shootBullet (as!!i) gstate)
-    | otherwise     = Nothing
-  where
-    as = filter ((== Alive) . aState) (aliens gstate)
-    (i, _) = randomR (0, alienBulletOdds) (mkStdGen r)
-    -- every alien has 1 / alienBulletsOdds probability to shoot (max 1 per function call)
 
 
 
@@ -93,6 +82,7 @@ withinButtonBounds (x,y) but = x > x' - halfW && x < x' + halfW
 
 
 
-playerShoots :: Player -> GameState -> GameState
-playerShoots p gstate = gstate { bullets = bul : bullets gstate, score = score gstate - 1 }
-  where bul = shootBullet p gstate
+addPlayerBullet :: Player -> GameState -> GameState
+addPlayerBullet p gstate = gstate { bullets = bul : bullets gstate, score = score gstate - 1 }
+  where bul = shootBullet p p -- second argument doesnt matter, since player doesnt shoot *at* something, 
+                              -- but rather in the direction he is pointed 

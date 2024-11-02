@@ -20,22 +20,24 @@ import Graphics.Gloss.Data.Vector (mulSV)
 step :: Float -> GameState -> IO GameState
 step _ menu@(Menu {}) = return menu 
 step secs gstate
-    | status gstate == FirstStep = readHighscore gstate
+    | status gstate == FirstStep 
+        = do r <- newStdGen
+             readHighscore gstate r
     | status gstate == GameOver || status gstate == Paused || status gstate == PreStart = return gstate
     | aPlayerHitsSomething gstate = finishGame gstate
     | elapsedTime gstate + secs > 1 / bigUpdatesPerSec 
-        = do r <- randomIO
-             return $ updateEveryStep secs (updatePerTimeUnit r (gstate { elapsedTime = elapsedTime gstate + secs - 1 / bigUpdatesPerSec}))
+        = return $ updateEveryStep secs (updatePerTimeUnit (gstate { elapsedTime = elapsedTime gstate + secs - 1 / bigUpdatesPerSec}))
              -- ^ we choose this exact elapsedTime instead of 0 so that lower framerates don't unnecessarily put elapsedTime at 0 all the time (which makes everything slower)
     | otherwise 
         = return $ updateEveryStep secs (gstate { elapsedTime = elapsedTime gstate + secs })
 
 
-readHighscore :: GameState -> IO GameState
-readHighscore gstate
+readHighscore :: GameState -> StdGen -> IO GameState
+readHighscore gstate r
     = do text <- readFile highscorePath
          let scores = lines text
          return $ gstate { status = PreStart, 
+                           gen = r,
                            highscore = case length scores of
                                        0 -> 0
                                        _ -> fromMaybe 0 (readMaybe (last scores)) } 
@@ -63,17 +65,22 @@ updateEveryStep secs gstate
     (remainingAliens, nrAliensShot) = checkBulletHitsAndUpdateAnims secs gstate (aliens gstate)
     updatePlayer = updateAnim secs . pCheckBounds . glide secs
 
-updatePerTimeUnit :: Int -> GameState -> GameState
-updatePerTimeUnit r gstate
+updatePerTimeUnit :: GameState -> GameState
+updatePerTimeUnit gstate
     =  gstate
          {
            player = updatePlayer (player gstate)
          , player2 = player2 gstate >>= Just . updatePlayer
-         , stenen = addMaybe (perhapsCreateNew gstate r) (stenen gstate)
-         , aliens = addMaybe (perhapsCreateNew gstate r) (aliens gstate)
-         , alienBullets = addMaybe (newBullet gstate r) (alienBullets gstate)
+         , stenen = addMaybe perhapsNewSteen (stenen gstate)
+         , aliens = addMaybe perhapsNewAlien (aliens gstate)
+         , alienBullets = addMaybe perhapsNewAlienBullet (alienBullets gstate)
+         , gen = newGen
          }
   where
+    (perhapsNewSteen, gen1) = perhapsCreateNew gstate (gen gstate)
+    (perhapsNewAlien, gen2) = perhapsCreateNew gstate gen1
+    (perhapsNewAlienBullet, newGen) = perhapsCreateNew gstate gen2
+
     keysPressed p = [('w', forwardPressed p), ('a', leftPressed p), ('d', rightPressed p)]
     updatePlayer = pAutoDecceleration . checkMovementKeysPressed
 
@@ -95,9 +102,9 @@ inputKey k@(EventKey (SpecialKey KeySpace) Down _ _) gstate@(GameState { status 
     = inputKey k (gstate { status = Running })
 
 inputKey (EventKey (SpecialKey KeySpace) Down _ _) gstate@(GameState { status = Running })
-    = playerShoots (player gstate) gstate
+    = addPlayerBullet (player gstate) gstate
 inputKey (EventKey (Char 'v') Down _ _) gstate@(GameState { status = Running, player2 = Just p })
-    = playerShoots p gstate
+    = addPlayerBullet p gstate
 
 inputKey (EventKey (SpecialKey KeyEsc) Down _ _) gstate@(GameState { status = Running })
     = gstate { status = Paused }
