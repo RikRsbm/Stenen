@@ -2,7 +2,7 @@ module General where
 
 
 import Graphics.Gloss 
-import Graphics.Gloss.Data.Vector (mulSV)
+import Graphics.Gloss.Data.Vector 
 import DataTypes
 
 
