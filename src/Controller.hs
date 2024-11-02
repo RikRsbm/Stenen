@@ -88,37 +88,35 @@ input e gstate = return (inputKey e gstate)
 
 
 inputKey :: Event -> GameState -> GameState
-inputKey (EventKey (Char 'r') Down _ _) gstate@(GameState { status = GameOver }) 
+inputKey (EventKey (Char 'm') Down _ _) gstate@(GameState { status = GameOver }) 
     = Menu (ufoPic gstate) (steenAnimPics gstate) (ufoAnimPics gstate) (boostAnimPics gstate)
 
-inputKey k@(EventKey (Char 'w') Down _ _) gstate@(GameState { status = PreStart }) -- if w is pressed for the first time, start the game and call inputkey again to move forward
+inputKey k@(EventKey (SpecialKey KeySpace) Down _ _) gstate@(GameState { status = PreStart }) -- if w is pressed for the first time, start the game and call inputkey again to move forward
     = inputKey k (gstate { status = Running })
 
 inputKey (EventKey (SpecialKey KeySpace) Down _ _) gstate@(GameState { status = Running })
-    = gstate { bullets = bul : bullets gstate, score = score gstate - 1 }
-  where bul = shootBullet (player gstate) gstate
-inputKey (EventKey (Char 'l') Down _ _) gstate@(GameState { status = Running, player2 = Just p })
-    = gstate { bullets = bul : bullets gstate, score = score gstate - 1 }
-  where bul = shootBullet p gstate
+    = playerShoots (player gstate) gstate
+inputKey (EventKey (Char 'v') Down _ _) gstate@(GameState { status = Running, player2 = Just p })
+    = playerShoots p gstate
 
 inputKey (EventKey (SpecialKey KeyEsc) Down _ _) gstate@(GameState { status = Running })
     = gstate { status = Paused }
 inputKey (EventKey (SpecialKey KeyEsc) Down _ _) gstate@(GameState { status = Paused })
     = gstate { status = Running }
 
-inputKey (EventKey (Char 'w') Down _ _) gstate@(GameState {}) = gstate { player = (player gstate) { forwardPressed = True } }
-inputKey (EventKey (Char 'w') Up _ _)   gstate@(GameState {}) = gstate { player = (player gstate) { forwardPressed = False } }
-inputKey (EventKey (Char 'a') Down _ _) gstate@(GameState {}) = gstate { player = (player gstate) { leftPressed = True } }
-inputKey (EventKey (Char 'a') Up _ _)   gstate@(GameState {}) = gstate { player = (player gstate) { leftPressed = False } }
-inputKey (EventKey (Char 'd') Down _ _) gstate@(GameState {}) = gstate { player = (player gstate) { rightPressed = True } }
-inputKey (EventKey (Char 'd') Up _ _)   gstate@(GameState {}) = gstate { player = (player gstate) { rightPressed = False } }
+inputKey (EventKey (SpecialKey KeyUp) Down _ _)    gstate@(GameState {}) = gstate { player = (player gstate) { forwardPressed = True } }
+inputKey (EventKey (SpecialKey KeyUp) Up _ _)      gstate@(GameState {}) = gstate { player = (player gstate) { forwardPressed = False } }
+inputKey (EventKey (SpecialKey KeyLeft) Down _ _)  gstate@(GameState {}) = gstate { player = (player gstate) { leftPressed = True } }
+inputKey (EventKey (SpecialKey KeyLeft) Up _ _)    gstate@(GameState {}) = gstate { player = (player gstate) { leftPressed = False } }
+inputKey (EventKey (SpecialKey KeyRight) Down _ _) gstate@(GameState {}) = gstate { player = (player gstate) { rightPressed = True } }
+inputKey (EventKey (SpecialKey KeyRight) Up _ _)   gstate@(GameState {}) = gstate { player = (player gstate) { rightPressed = False } }
 
-inputKey (EventKey (Char 'u') Down _ _)  gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { forwardPressed = True } }
-inputKey (EventKey (Char 'u') Up _ _)    gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { forwardPressed = False } }
-inputKey (EventKey (Char 'h') Down _ _)  gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { leftPressed = True } }
-inputKey (EventKey (Char 'h') Up _ _)    gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { leftPressed = False } }
-inputKey (EventKey (Char 'k') Down _ _)  gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { rightPressed = True } }
-inputKey (EventKey (Char 'k') Up _ _)    gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { rightPressed = False } }
+inputKey (EventKey (Char 'w') Down _ _)  gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { forwardPressed = True } }
+inputKey (EventKey (Char 'w') Up _ _)    gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { forwardPressed = False } }
+inputKey (EventKey (Char 'a') Down _ _)  gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { leftPressed = True } }
+inputKey (EventKey (Char 'a') Up _ _)    gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { leftPressed = False } }
+inputKey (EventKey (Char 'd') Down _ _)  gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { rightPressed = True } }
+inputKey (EventKey (Char 'd') Up _ _)    gstate@(GameState { player2 = Just p2}) = gstate { player2 = Just p2 { rightPressed = False } }
 
 inputKey (EventKey (MouseButton LeftButton) Down _ p) menu@(Menu {}) = newState
   where
@@ -129,15 +127,7 @@ inputKey (EventKey (MouseButton LeftButton) Down _ p) menu@(Menu {}) = newState
              | otherwise                = menu
 
     initState = initialState (ufoPic menu) (steenAnimPics menu) (ufoAnimPics menu) (boostAnimPics menu)
-    multState = initState { player2 = Just (Player (0, -50) 
-                                           (0, 0) 
-                                           (0, lookDirectionVecMagnitude)
-                                           NotBoosting
-                                           player2Color
-                                           False
-                                           False
-                                           False
-                                           ) }
+    multState = initState { player2 = Just initialPlayer2 }
 
 inputKey _ gstate = gstate -- other key events (and events in general)
 

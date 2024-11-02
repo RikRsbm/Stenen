@@ -91,3 +91,8 @@ withinButtonBounds (x,y) but = x > x' - halfW && x < x' + halfW
 
 
 
+
+
+playerShoots :: Player -> GameState -> GameState
+playerShoots p gstate = gstate { bullets = bul : bullets gstate, score = score gstate - 1 }
+  where bul = shootBullet p gstate

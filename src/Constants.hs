@@ -78,7 +78,7 @@ alienOdds :: Int
 alienOdds = 400
 
 alienBulletOdds :: Int
-alienBulletOdds = 100
+alienBulletOdds = 200
 
 ufoScale :: Float
 ufoScale = 2 * alienRadius / ufoBmpSize

@@ -36,15 +36,7 @@ data GameState = GameState {
                  }
 
 initialState :: Picture -> [Picture] -> [Picture] -> [Picture] -> GameState
-initialState = GameState (Player (0, 0) 
-                                 (0, 0) 
-                                 (0, lookDirectionVecMagnitude)
-                                 NotBoosting
-                                 player1Color
-                                 False
-                                 False
-                                 False
-                         ) 
+initialState = GameState initialPlayer1
                          Nothing
                          []
                          []
@@ -76,6 +68,23 @@ data Player = Player {
               , rightPressed :: Bool
               } 
               deriving Eq
+
+initialPlayer1 :: Player
+initialPlayer1 = Player (0, 0) 
+                 (0, 0) 
+                 (0, lookDirectionVecMagnitude)
+                 NotBoosting
+                 player1Color
+                 False
+                 False
+                 False
+
+initialPlayer2 :: Player
+initialPlayer2 = initialPlayer1 { pColor = player2Color, pLocation = (0, -50) }
+                             
+
+
+
 
 data Steen = Steen { 
                sLocation :: Point -- location of asteroid
@@ -114,6 +123,8 @@ data ZeroToTwo = Zero2 | One2 | Two2
 data BulletType = FromPlayer | FromAlien deriving (Show, Eq)
 
 data Direction = Forward | Left | Right
+
+data Mode = Singleplayer | Multiplayer
 
 
 
