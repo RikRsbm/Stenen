@@ -164,11 +164,8 @@ explanationX = -450
 
 -- animations
 
-timePerSteenImplosionFrame :: Float
-timePerSteenImplosionFrame = 0.1
-
-timePerAlienImplosionFrame :: Float
-timePerAlienImplosionFrame = 0.1
+timePerImplosionFrame :: Float
+timePerImplosionFrame = 0.1
 
 timePerBoostFrame :: Float
 timePerBoostFrame = 0.05
@@ -195,7 +192,7 @@ boostPicsScale = 0.7 * playerRadius / boostBmpSize
 buttonSize :: (Float, Float)
 buttonSize = (350, 100)
 
-bigUpdatesPerSec :: Float
+bigUpdatesPerSec :: Float -- increasing this will speed up the game
 bigUpdatesPerSec = 60
 
 highscorePath :: String

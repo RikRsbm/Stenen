@@ -8,17 +8,17 @@ import MovableClass
 import DataTypes
 import Graphics.Gloss.Data.Vector
 import Constants
+import General 
 
 
 
-class Movable a => CanCollideWithPlayer a where
-    pColliding :: Player -> a -> Bool
-    pColliding p m  
-        | magV (x - a, y - b) < radius m + playerRadius / 2 = True -- /2 so that you actually have to touch the stone / bullet / alien if you are sideways
-        | otherwise                                         = False
-      where 
-        (x, y) = location p
-        (a, b) = location m
+-- this type class generalizes objects that can collide with the player
+
+
+class Movable m => CanCollideWithPlayer m where
+    pColliding :: Player -> m -> Bool -- are player and 'm' currently colliding?
+    pColliding p m = pointsWithinDistance (location p) (location m) (radius m + playerRadius / 2)
+        -- /2 so that the player actually has to touch the steen / bullet / alien if the player is sideways
 
 instance CanCollideWithPlayer Steen where
 
@@ -26,9 +26,7 @@ instance CanCollideWithPlayer Bullet where
 
 instance CanCollideWithPlayer Alien where
     pColliding :: Player -> Alien -> Bool
-    pColliding p al  
-        | magV (x - a, y - b) < radius al / 2 + playerRadius / 2 = True -- the left /2 is so that you actually have to touch the alien when the alien is sideways
-        | otherwise                                              = False
-      where 
-        (x, y) = location p
-        (a, b) = location al
+    pColliding p m = pointsWithinDistance (location p) (location m) (radius m / 2 + playerRadius / 2)  
+        -- the left /2 is so that the player actually has to hit the alien when the player approaches from above or beneath
+
+

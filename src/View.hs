@@ -57,7 +57,7 @@ viewScore s = viewText (250, 250) smallTextScale textColor ("Score: " ++ show s)
 viewHighscore :: Int -> Picture
 viewHighscore s = translate 190 210 (scale smallTextScale smallTextScale (color textColor (text ("Highscore: " ++ show s))))
 
-viewStatus :: Status -> Picture
+viewStatus :: GameStatus -> Picture
 viewStatus PreStart = viewText (-180, statusY) bigTextScale textColor "Space to start"
 viewStatus Paused = viewText (-300, statusY) bigTextScale textColor "Paused, Esc to resume"
 viewStatus GameOver = viewText (-320, statusY) bigTextScale textColor "Game over, M for menu"

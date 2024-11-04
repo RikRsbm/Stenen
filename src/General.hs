@@ -34,6 +34,9 @@ addVecToPt :: Point -> Vector -> Point
 addVecToPt (x, y) (x', y') = (x + x', 
                               y + y')
 
+pointsWithinDistance :: Point -> Point -> Float -> Bool
+pointsWithinDistance (x, y) (a, b) d = magV (x - a, y - b) < d
+
 
 
 

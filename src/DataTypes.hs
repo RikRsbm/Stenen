@@ -3,10 +3,8 @@ module DataTypes where
 
 
 import Constants
-import Graphics.Gloss
-import Graphics.Gloss.Data.Vector 
+import Graphics.Gloss 
 import System.Random 
-import Data.Maybe
 
 
 
@@ -18,7 +16,7 @@ data GameState = GameState {
                  , bullets :: [Bullet] -- list of onscreen bullets
                  , aliens :: [Alien] -- list of onscreen aliens
                  , alienBullets :: [Bullet] -- list of onscreen bullets from the alien
-                 , status :: Status -- status of game
+                 , status :: GameStatus -- status of game
                  , score :: Int -- current score
                  , highscore :: Int -- all time highscore (gets loaded in at start of game)
                  , elapsedTime :: Float
@@ -49,16 +47,6 @@ initialState = GameState initialPlayer1
                          0
                          (mkStdGen 0) -- will be changed to a random seed in the first step
 
-
-
-
-
-data Status = FirstStep -- the first step of the game, it then reads the highscore from highscore.txt
-            | PreStart -- between FirstStep and the first 'w' press
-            | Running -- while the game is running
-            | Paused -- while the game is paused
-            | GameOver -- when the game is over
-            deriving Eq
 
 
 
@@ -95,13 +83,13 @@ data Steen = Steen {
                sLocation :: Point -- location of asteroid
              , sVelocity :: Vector -- velocity of asteroid
              , sRadius :: Float -- radius of asteroid
-             , sState :: State -- state of the animation
+             , sState :: DieState -- state of the animation
              } 
 
 data Alien = Alien {
                aLocation :: Point -- location of alien
              , aVelocity :: Vector -- velocity of alien
-             , aState :: State -- state of the animation
+             , aState :: DieState -- state of the animation
              }
 
 data Bullet = Bullet {
@@ -110,17 +98,29 @@ data Bullet = Bullet {
               , bColor :: Color -- color of Bullet
               }
 
-data State = Alive 
-           | ExplosionState ZeroToFour Float -- which state, how many seconds has it been at this state
+
+
+
+
+
+data GameStatus = FirstStep -- the first step of the game, it then reads the highscore from highscore.txt
+                | PreStart -- between FirstStep and the first 'w' press
+                | Running -- while the game is running
+                | Paused -- while the game is paused
+                | GameOver -- when the game is over
+                deriving Eq
+
+data DieState = Alive 
+           | Dying ZeroToFour Float -- which frame, how many seconds has it been at this frame
            | Dead
            deriving (Show, Eq)
-
-data ZeroToFour = Zero4 | One4 | Two4 | Three4 | Four4
-                  deriving (Show, Eq, Enum, Bounded)
 
 data BoostState = NotBoosting
                 | BoostFrame ZeroToTwo Float -- which frame, how many seconds it has been at this frame
                 deriving (Show, Eq)
+
+data ZeroToFour = Zero4 | One4 | Two4 | Three4 | Four4
+                  deriving (Show, Eq, Enum, Bounded)
 
 data ZeroToTwo = Zero2 | One2 | Two2
                  deriving (Show, Eq, Enum, Bounded)

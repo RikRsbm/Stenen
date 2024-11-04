@@ -3,8 +3,6 @@ module HandleStep where
 import DataTypes
 import MorePlayerLogic
 import Constants
-import General
-import Graphics.Gloss.Interface.IO.Game
 import System.Random
 import Data.Maybe
 import Control.Monad
@@ -14,7 +12,6 @@ import TempObjectClass
 import MovableClass
 import HasAnimationClass
 import RandomObjectClass
-import Data.List
 
 
 
@@ -86,6 +83,6 @@ updatePerTimeUnit gstate
     (perhapsNewAlienBullet, newGen) = perhapsCreateNew gstate gen2
 
     keysPressed p = [('w', forwardPressed p), ('a', leftPressed p), ('d', rightPressed p)]
-    updatePlayer = pAutoDecceleration . checkMovementKeysPressed
+    updatePlayer = autoDecceleration . checkMovementKeysPressed
 
     addMaybe mx xs = maybe xs (: xs) mx

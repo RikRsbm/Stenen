@@ -28,5 +28,6 @@ executable FPproject
                      , CanGetHitByPlayerBulletClass
                      , RandomObjectClass
                      , HasAnimationClass
+                     , HasImplosionAnimationClass
                      , ViewableClass
   default-language:    Haskell2010

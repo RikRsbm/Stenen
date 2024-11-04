@@ -54,7 +54,7 @@ mkBoostPicture _ _ _ = Blank
 instance Viewable Steen where
     mkPicture :: GameState -> Steen -> Picture
 
-    mkPicture gstate s@(Steen { sState = ExplosionState i _ }) 
+    mkPicture gstate s@(Steen { sState = Dying i _ }) 
         = translate x y (scale sc sc (steenAnimPics gstate !! fromEnum i))
       where 
         (x, y) = location s
@@ -66,7 +66,7 @@ instance Viewable Steen where
 instance Viewable Alien where
     mkPicture :: GameState -> Alien -> Picture
 
-    mkPicture gstate a@(Alien { aState = ExplosionState i _ }) 
+    mkPicture gstate a@(Alien { aState = Dying i _ }) 
         = translate x y (ufoAnimPics gstate !! fromEnum i)
       where 
         (x, y) = location a

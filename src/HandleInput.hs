@@ -36,8 +36,8 @@ inputKey e@(EventKey key Down _ _) gstate@(GameState { status, player, player2 }
     | key == Char 'm'            && status == GameOver 
         = Menu (ufoPic gstate) (steenAnimPics gstate) (ufoAnimPics gstate) (boostAnimPics gstate)
     | key == SpecialKey KeySpace && status == PreStart = inputKey e (gstate { status = Running })
-    | key == SpecialKey KeySpace && status == Running  = addPlayerBullet gstate player
-    | key == Char 'v'            && status == Running  = maybe gstate (addPlayerBullet gstate) player2
+    | key == SpecialKey KeySpace && status == Running  = playerShoots gstate player
+    | key == Char 'v'            && status == Running  = maybe gstate (playerShoots gstate) player2
     | key == SpecialKey KeyEsc   && status == Running  = gstate { status = Paused }
     | key == SpecialKey KeyEsc   && status == Paused   = gstate { status = Running }
     | key == SpecialKey KeyUp                          = gstate { player = player { forwardPressed = True } }

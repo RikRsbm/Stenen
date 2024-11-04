@@ -49,16 +49,16 @@ instance RandomObject Steen where
         halfWidthFloat = fromIntegral halfWidth
         halfHeightFloat = fromIntegral halfHeight
 
-instance RandomObject Alien where -- we don't use gstate yet, we might in the future (so that it can move towards the player or something like that)
+instance RandomObject Alien where 
     perhapsCreateNew :: GameState -> StdGen -> (Maybe Alien, StdGen)
     perhapsCreateNew _ gen 
         | creationOdds == 0 = (Just (Alien (x, y) (dx, dy) Alive), newGen)
         | otherwise         = (Nothing, gen1)
       where
-        (creationOdds, gen1  ) = randomR (0               , alienCreationOdds) gen 
-        (randomX     , gen2  ) = randomR (- halfWidth  - r, halfWidth  + r   ) gen1
-        (randomY     , gen3  ) = randomR (- halfHeight - r, halfHeight + r   ) gen2
-        (side        , newGen) = randomR (0  :: Int       , 3                ) gen3
+        (creationOdds, gen1  ) = randomR (0                , alienCreationOdds) gen 
+        (randomX     , gen2  ) = randomR (- halfWidth  + dr, halfWidth  - dr  ) gen1 -- + dr (resp - dr) ensures that alien dome is always within the form
+        (randomY     , gen3  ) = randomR (- halfHeight + dr, halfHeight - dr  ) gen2
+        (side        , newGen) = randomR (0  :: Int        , 3                ) gen3
 
         (x, y, dx, dy) = case side of -- pick a side
                           0 -> (fromIntegral randomX          , - halfHeightFloat - alienRadius, 0           ,   alienSpeed) 
@@ -66,7 +66,8 @@ instance RandomObject Alien where -- we don't use gstate yet, we might in the fu
                           2 -> (- halfWidthFloat - alienRadius, fromIntegral randomY           ,   alienSpeed, 0           )
                           _ -> (  halfWidthFloat + alienRadius, fromIntegral randomY           , - alienSpeed, 0           )
 
-        r = round alienRadius
+        r = round alienRadius -- the radius of the entire alien, not just the dome
+        dr = r `div` 2 -- roughly the radius of the alien dome. That way we make sure at least the dome spawns within the form
 
         halfWidth = screenWidth `div` 2
         halfHeight = screenHeight `div` 2
