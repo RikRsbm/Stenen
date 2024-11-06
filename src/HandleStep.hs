@@ -8,10 +8,11 @@ import Data.Maybe
 import Control.Monad
 import CanGetHitByPlayerBulletClass
 import Text.Read (readMaybe)
-import TempObjectClass 
+import TempObjectClass
 import MovableClass
 import HasAnimationClass
 import RandomObjectClass
+import Data.Foldable (Foldable(foldl'))
 
 
 
@@ -19,39 +20,47 @@ import RandomObjectClass
 
 
 step :: Float -> GameState -> IO GameState
-step _ menu@(Menu {}) = return menu 
+step _ menu@(Menu {}) = return menu
 step secs gstate
-    | status gstate == FirstStep 
+    | status gstate == FirstStep
         = do r <- newStdGen
-             readHighscore gstate r
-    | status gstate == GameOver || status gstate == Paused || status gstate == PreStart = return gstate
-    | aPlayerHitsSomething gstate = finishGame gstate
-    | elapsedTime gstate + secs > 1 / bigUpdatesPerSec 
-        = return $ updateEveryStep secs (updatePerTimeUnit (gstate { elapsedTime = elapsedTime gstate + secs - 1 / bigUpdatesPerSec}))
-             -- ^ we choose this exact elapsedTime instead of 0 so that lower framerates don't unnecessarily put elapsedTime at 0 all the time (which makes everything slower)
-    | otherwise 
-        = return $ updateEveryStep secs (gstate { elapsedTime = elapsedTime gstate + secs })
+             firstStep gstate r
+    | status gstate == Running && aPlayerHitsSomething gstate
+        = finishGame gstate
+    | otherwise
+        = return $ pureStep secs gstate
 
 
-readHighscore :: GameState -> StdGen -> IO GameState
-readHighscore gstate r
+firstStep :: GameState -> StdGen -> IO GameState
+firstStep gstate r
     = do text <- readFile highscorePath
          let scores = lines text
-         return $ gstate { status = PreStart, 
+         return $ gstate { status = PreStart,
                            gen = r,
-                           highscore = case scores of
-                                       [] -> 0
-                                       _  -> fromMaybe 0 (readMaybe (last scores)) } 
+                           highscore = maybe 0 read (maybeLast scores) }
+  where maybeLast = foldl' (\_ x -> Just x) Nothing
 
 finishGame :: GameState -> IO GameState
 finishGame gstate
-    = do when (score gstate > highscore gstate)   
-             $ appendFile highscorePath (show (score gstate) ++ "\n") 
+    = do when (score gstate > highscore gstate)
+             $ appendFile highscorePath (show (score gstate) ++ "\n")
          return $ gstate { status = GameOver}
 
+
+
+pureStep :: Float -> GameState -> GameState
+pureStep secs gstate
+    | status gstate == GameOver || status gstate == Paused || status gstate == PreStart
+        = gstate
+    | elapsedTime gstate + secs > 1 / bigUpdatesPerSec
+        = updateEveryStep secs (updatePerTimeUnit (gstate { elapsedTime = elapsedTime gstate + secs - 1 / bigUpdatesPerSec}))
+             -- ^ we choose this exact elapsedTime instead of 0 so that lower framerates don't unnecessarily put elapsedTime at 0 all the time (which makes everything slower)
+    | otherwise
+        = updateEveryStep secs (gstate { elapsedTime = elapsedTime gstate + secs })
+
 updateEveryStep :: Float -> GameState -> GameState
-updateEveryStep secs gstate 
-    = gstate 
+updateEveryStep secs gstate
+    = gstate
         {
           player = updatePlayer (player gstate)
         , player2 = updatePlayer <$> player2 gstate
@@ -59,10 +68,10 @@ updateEveryStep secs gstate
         , bullets = updateLocations secs (bullets gstate)
         , aliens = updateLocations secs remainingAliens
         , alienBullets = updateLocations secs (alienBullets gstate)
-        , score = score gstate + steenScoreMultiplier * nrStenenShot + alienScoreMultiplier * nrAliensShot 
+        , score = score gstate + steenScoreMultiplier * nrStenenShot + alienScoreMultiplier * nrAliensShot
         }
-  where 
-    (remainingStenen, nrStenenShot) = checkBulletHitsAndUpdateAnims secs gstate (stenen gstate) 
+  where
+    (remainingStenen, nrStenenShot) = checkBulletHitsAndUpdateAnims secs gstate (stenen gstate)
     (remainingAliens, nrAliensShot) = checkBulletHitsAndUpdateAnims secs gstate (aliens gstate)
     updatePlayer = updateAnim secs . pCheckBounds . glide secs
 
