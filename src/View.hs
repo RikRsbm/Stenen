@@ -18,8 +18,8 @@ viewPure :: GameState -> Picture
 viewPure gstate@(GameState { status = PreStart }) -- add instructions
     = pictures [viewBasicStuff gstate, 
                 case player2 gstate of
-                Just p -> viewInstructions Singleplayer
-                _      -> viewInstructions Multiplayer]
+                Just p -> viewInstructions Multiplayer
+                _      -> viewInstructions Singleplayer]
 viewPure gstate = viewBasicStuff gstate -- otherwise, just draw: 1. the menu, or 2. all entities, the score and the status (if any)
 
 viewBasicStuff :: GameState -> Picture
