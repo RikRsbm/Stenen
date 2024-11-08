@@ -17,9 +17,7 @@ view gstate = return (viewPure gstate)
 viewPure :: GameState -> Picture
 viewPure gstate@(GameState { status = PreStart }) -- add instructions
     = pictures [viewBasicStuff gstate, 
-                case player2 gstate of
-                Just p -> viewInstructions Multiplayer
-                _      -> viewInstructions Singleplayer]
+                viewInstructions $ maybe Singleplayer (const Multiplayer) (player2 gstate)]
 viewPure gstate = viewBasicStuff gstate -- otherwise, just draw: 1. the menu, or 2. all entities, the score and the status (if any)
 
 viewBasicStuff :: GameState -> Picture
@@ -29,9 +27,7 @@ viewBasicStuff gstate@(GameState {}) = pictures pics
     pics = steenPics ++ alienPics ++ bulletPics ++ alienBulletPics ++ [playerPic, player2Pic, scorePic, highscorePic, statusPic]
 
     playerPic = pict (player gstate)
-    player2Pic = case player2 gstate of
-                 Just p -> pict p
-                 _      -> Blank
+    player2Pic = maybe Blank pict (player2 gstate)
 
     steenPics = map pict (stenen gstate)
     alienPics = map pict (aliens gstate)
