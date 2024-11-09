@@ -8,22 +8,29 @@ import Constants
 import HasImplosionAnimationClass
 
 
+
+-- this class generalizes the objects that have an animation
+
+
+
 class HasAnimation a where
-    updateAnim :: Float -> a -> a
+    updateAnim :: Float -> a -> a -- update the animation if enough time has passed 
 
 instance HasAnimation Player where
     updateAnim :: Float -> Player -> Player
     updateAnim secs p@(Player { boostState = BoostFrame x time }) 
-        | time + secs > timePerBoostFrame = p { boostState = BoostFrame (case x of 
-                                                                         Two2 -> Zero2
-                                                                         other -> succ other) 
-                                                            (time + secs - timePerBoostFrame) }
-        | otherwise                       = p { boostState = BoostFrame x (time + secs) }
+        | time + secs > timePerBoostFrame -- if it's time for a new boost frame, update the animation
+            = p { boostState = BoostFrame (case x of 
+                                           Two2 -> Zero2 -- if it's the last frame, return to the first
+                                           other -> succ other) -- otherwise, choose the next frame
+                               (time + secs - timePerBoostFrame) }
+        | otherwise -- if not enough time has passed, do nothing
+            = p { boostState = BoostFrame x (time + secs) }
     updateAnim secs p = p -- not boosting
 
 instance HasAnimation Steen where
     updateAnim :: Float -> Steen -> Steen
-    updateAnim = updateImplosionAnim
+    updateAnim = updateImplosionAnim 
 
 instance HasAnimation Alien where
     updateAnim :: Float -> Alien -> Alien

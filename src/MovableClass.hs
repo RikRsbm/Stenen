@@ -11,17 +11,19 @@ import Constants
 
     
 
+-- this class generalizes the objects that can move
 
 
 
-class Movable a where -- things on screen that can move
-    radius :: a -> Float
+
+class Movable a where 
+    radius :: a -> Float 
     location :: a -> Point
-    velocity :: a -> Vector
-    replaceLocation :: a -> Point -> a
+    velocity :: a -> Vector -- velocity of object, in pixels/sec
+    replaceLocation :: a -> Point -> a -- replaces the location of the object by the provided location
 
-    glide :: Float -> a -> a -- how they should glide through space every step
-    glide secs a = replaceLocation a (x + dx * secs, y + dy * secs)
+    updateLocation :: Float -> a -> a -- updates the location to where the object should be at this point in time
+    updateLocation secs a = replaceLocation a (x + dx * secs, y + dy * secs)
       where
         (x, y) = location a
         (dx, dy) = velocity a
@@ -38,10 +40,6 @@ instance Movable Player where
 
     replaceLocation :: Player -> Point -> Player
     replaceLocation p loc = p { pLocation = loc }
-
-    glide :: Float -> Player -> Player
-    glide secs p@(Player { pLocation = (x, y), pVelocity = (dx, dy) }) -- updates player position and velocity
-        = p { pLocation = (x + dx * secs, y + dy * secs) }
 
 instance Movable Steen where
     radius :: Steen -> Float

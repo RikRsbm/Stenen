@@ -8,27 +8,33 @@ import Graphics.Gloss
 
 
 
+-- this module contains all constants that are used multiple times 
+-- (including some that are only used once, for readability)
+
+
+
+
 -- speeds, all speeds are in pixels/sec
 
-autoDecelPlayer :: Float -- amount of automatic decrease of speed per step
+autoDecelPlayer :: Float -- amount of automatic decrease of player speed per game tick 
 autoDecelPlayer = 2.5
 
-inputAccelPlayer :: Float -- amount of added speed with 'w' press per step
+inputAccelPlayer :: Float -- amount of added speed with 'w' press per game tick
 inputAccelPlayer = 9
 
-alienSpeed :: Float
+alienSpeed :: Float -- speed of alien
 alienSpeed = 120
 
-steenMinSpeed :: Int
+steenMinSpeed :: Int -- minimum possible speed of steen
 steenMinSpeed = 60
 
-steenMaxSpeed :: Int
+steenMaxSpeed :: Int -- maximum possible speed of steen
 steenMaxSpeed = 120
 
-playerBulletSpeed :: Float -- player bullet gets this speed + speed of player
+playerBulletSpeed :: Float -- speed of player bullet (relative to player velocity, so actual speed of bullet may vary) 
 playerBulletSpeed = 360
 
-alienBulletSpeed :: Float -- alien bullet gets this speed
+alienBulletSpeed :: Float -- speed of alien bullet (relative to the point it was shot from, NOT relative to alien velocity)
 alienBulletSpeed = 240
 
 
@@ -37,7 +43,7 @@ alienBulletSpeed = 240
 
 -- steering
 
-inputSteerPlayer :: Float -- angle that player steers with 'a' or 'd' press per step, in radians
+inputSteerPlayer :: Float -- angle that player steers with 'a' or 'd' press per game tick, in radians
 inputSteerPlayer = pi / 40
 
 
@@ -47,22 +53,22 @@ inputSteerPlayer = pi / 40
 
 -- sizes
 
-steenMinRadius :: Int
+steenMinRadius :: Int -- minimum possible radius of steen
 steenMinRadius = 15
 
-steenMaxRadius :: Int
+steenMaxRadius :: Int -- maximum possible radius of steen
 steenMaxRadius = 40
 
-alienRadius :: Float
+alienRadius :: Float -- radius of alien 
 alienRadius = 35
 
-playerRadius :: Float 
+playerRadius :: Float -- radius of player
 playerRadius = 15
 
-bulletRadius :: Float
+bulletRadius :: Float -- radius of bullet
 bulletRadius = 4
 
-playerBackLineRatio :: Float 
+playerBackLineRatio :: Float -- back line size / player diameter 
 playerBackLineRatio = 0.5
 
 
@@ -71,7 +77,7 @@ playerBackLineRatio = 0.5
 
 
 
--- randomisation, per step there is a 1 in (odds) chance of a spawn
+-- randomisation, per game tick there is a 1 in (odds) chance of the event happening
 
 steenCreationOdds :: Int
 steenCreationOdds = 100
@@ -88,20 +94,20 @@ alienShootsOdds = 150
 
 
 
--- score rewards
+-- kill rewards, these values gets added to the score when you shoot a steen / alien
 
 steenScoreMultiplier :: Int
 steenScoreMultiplier = 3
 
 alienScoreMultiplier :: Int
-alienScoreMultiplier = 4
+alienScoreMultiplier = 5
 
 
 
 
 
 
--- assigned colors
+-- colors
 
 textColor :: Color
 textColor = lightBlue
@@ -123,7 +129,7 @@ steenColor = lightGray
 
 
 
--- colors
+-- selfmade colors
 
 pink :: Color
 pink = makeColor 1 0.31 0.95 1
@@ -144,17 +150,17 @@ lightGray = makeColor 0.9 0.9 0.9 1
 
 -- text size and positioning
 
-bigTextScale :: Float
+bigTextScale :: Float -- compared to standard text size
 bigTextScale = 0.4
 
-smallTextScale :: Float
+smallTextScale :: Float -- compared to standard text size
 smallTextScale = 0.25
 
-statusY :: Float 
+statusY :: Float  -- y-value that status information is displayed at
 statusY = -150
 
-explanationX :: Float 
-explanationX = -450
+instructionX :: Float -- x-value that instructions get displayed at
+instructionX = -450
 
 
 
@@ -164,23 +170,26 @@ explanationX = -450
 
 -- animations
 
-timePerImplosionFrame :: Float
+timePerImplosionFrame :: Float -- time that each implosion frame takes
 timePerImplosionFrame = 0.1
 
-timePerBoostFrame :: Float
+timePerBoostFrame :: Float -- time that each boost frame takes
 timePerBoostFrame = 0.05
 
-boostBmpSize :: Float
+boostBmpSize :: Float -- the height (short side) (in pixels) of the boost pictures in the Pictures folder
 boostBmpSize = 15
 
-ufoBmpSize :: Float
-ufoBmpSize = 70
+alienBmpSize :: Float -- the width (in pixels) of the alien (and alien implosion) pictures in the Pictures folder
+alienBmpSize = 70
 
-steenImplosionBmpSize :: Float
+steenImplosionBmpSize :: Float -- the width (in pixels) of the steen implosion pictures in the Pictures folder
 steenImplosionBmpSize = 70
 
-boostPicsScale :: Float -- first number is scale of boost animation compared to size of player
-boostPicsScale = 0.7 * playerRadius / boostBmpSize
+alienPicsScale :: Float -- when scaled by this constant, the alien pictures get the proper size, corresponding with alienRadius
+alienPicsScale = 2 * alienRadius / alienBmpSize
+
+boostPicsScale :: Float -- when scaled by this constant, the boost pictures get the proper size, corresponding with the size of the back line of the player
+boostPicsScale = 0.7 * (playerBackLineRatio * 2 * playerRadius) / boostBmpSize
 
 
 
@@ -189,17 +198,23 @@ boostPicsScale = 0.7 * playerRadius / boostBmpSize
 
 -- miscellaneous
 
-buttonSize :: (Float, Float)
+buttonSize :: (Float, Float) -- size of the menu buttons
 buttonSize = (350, 100)
 
-bigUpdatesPerSec :: Float -- increasing this will speed up the game
-bigUpdatesPerSec = 60
+gameTicksPerSec :: Float -- how often the game updates its state. Increasing this will speed up the game
+gameTicksPerSec = 60
 
-highscorePath :: String
+highscorePath :: String -- location of file with highscores
 highscorePath = "highscore.txt"
 
-screenWidth :: Int
+screenWidth :: Int -- width of screen
 screenWidth = 1000
 
-screenHeight :: Int
+screenHeight :: Int -- height of screen
 screenHeight = 600
+
+widthHeightRatio :: Float
+widthHeightRatio = fromIntegral screenWidth / fromIntegral screenHeight
+
+picturesFolder :: String -- location of folder where the pictures are located
+picturesFolder = "Pictures/"

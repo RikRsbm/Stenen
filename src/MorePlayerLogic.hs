@@ -10,36 +10,38 @@ import System.Random
 import MovableClass
 import CanCollideWithPlayerClass
 import CanShootClass
+import HasImplosionAnimationClass
 
 
 
 
-steer :: Player -> Float -> Player
-steer p angle = p { lookDirection = rotateV angle (lookDirection p) } -- steer lookDirection 'angle' degrees in direction 'd'
+-- this module contains the logic that is specific to the Player datatype
+
+
+
+steer :: Player -> Float -> Player -- steer the player 'angle' radians counterclockwise
+steer p angle = p { lookDirection = rotateV angle (lookDirection p) } 
 
 
 
 
-autoDecceleration :: Player -> Player
+autoDecceleration :: Player -> Player -- apply automatic decceleration to the player
 autoDecceleration p@(Player { pVelocity = vec }) = p { pVelocity = newVec }
   where
-    newVec | magV vec < autoDecelPlayer = (0, 0) -- if player (almost) stands  still
-           | otherwise                  = vec `subVec` mulSV autoDecelPlayer (normalizeV vec) -- decelleration
+    newVec | magV vec < autoDecelPlayer = (0, 0) -- if player almost stands still, set his velocity to 0
+           | otherwise                  = vec `subVec` mulSV autoDecelPlayer (normalizeV vec) 
 
 
 
 
-boost :: Player -> Player
+boost :: Player -> Player -- apply the standard amount of acceleration to the player (the player is currently pressing the boost key)
 boost p@(Player { pVelocity = vec }) 
-    = p { pVelocity = vec `addVec` mulSV inputAccelPlayer (lookDirection p), 
-          boostState = case boostState p of 
-              NotBoosting -> BoostFrame Zero2 0 
-              _           -> boostState p}
+    = p { pVelocity = vec `addVec` mulSV inputAccelPlayer (lookDirection p) }
 
 
 
 
-playerShoots :: GameState -> Player -> GameState
+playerShoots :: GameState -> Player -> GameState -- the player shoots, so create a new bullet and add it to the gamestate. subtract 1 point from the score
 playerShoots gstate p = gstate { bullets = bul : bullets gstate, score = score gstate - 1 }
   where bul = shootBullet p p -- second argument doesnt matter, since player doesnt shoot *at* something, 
                               -- but rather in the direction he is pointed 
@@ -66,26 +68,28 @@ pCheckBounds p@(Player { pLocation = (x, y), pVelocity = (dx, dy) })
 
 
 
-aPlayerHitsSomething :: GameState -> Bool
-aPlayerHitsSomething gstate = thisPlayerHitsSomething gstate (player gstate) ||
-                              case player2 gstate of
-                              Just p -> thisPlayerHitsSomething gstate p
-                              _      -> False
+aPlayerHitsSomething :: GameState -> Bool -- check whether a player hits something (and therefore dies)
+aPlayerHitsSomething gstate = thisPlayerHitsSomething gstate (player gstate) ||             -- if player1 hits something
+                              maybe False (thisPlayerHitsSomething gstate) (player2 gstate) -- if player2 exists and hits something
 
-thisPlayerHitsSomething :: GameState -> Player -> Bool
-thisPlayerHitsSomething gstate p = any (pColliding p) (filter ((== Alive) . sState) (stenen gstate)) ||
-                                   any (pColliding p) (filter ((== Alive) . aState) (aliens gstate)) ||
-                                   any (pColliding p) (alienBullets gstate)
+thisPlayerHitsSomething :: GameState -> Player -> Bool -- check whether this player hits something
+thisPlayerHitsSomething gstate p = collidesWith (alive (stenen gstate)) || -- if player hits an alive steen
+                                   collidesWith (alive (aliens gstate)) || -- if player hits an alive alien
+                                   collidesWith (alienBullets gstate)      -- if an alien bullet hits the player
+  where
+    alive :: HasImplosionAnimation a => [a] -> [a]
+    alive = filter ((== Alive) . dieState)
+
+    collidesWith :: CanCollideWithPlayer a => [a] -> Bool
+    collidesWith = any (pColliding p)  
 
 
 
 
 
-pickPlayer :: GameState -> StdGen -> (Player, StdGen)
+pickPlayer :: GameState -> StdGen -> (Player, StdGen) -- randomly picks player1 or player2 (if player2 doesn't exist, it picks player1). also updates the generator
 pickPlayer gstate gen = (case player2 gstate of
-                         Just pl2 -> case i of
-                                      1 -> player gstate
-                                      _ -> pl2
+                         Just pl2 -> if i == 1 then player gstate else pl2
                          _        -> player gstate
                        , newGen)
   where
@@ -95,14 +99,15 @@ pickPlayer gstate gen = (case player2 gstate of
 
 
 
-checkMovementKeysPressed :: Player -> Player
+checkMovementKeysPressed :: Player -> Player -- checks whether player wants to boost or steer, handles accordingly
 checkMovementKeysPressed p = foldr checkMovementKeyPressed p keysPressed
   where 
-    keysPressed = [(Forward, forwardPressed p), (DataTypes.Left, leftPressed p), (DataTypes.Right, rightPressed p)]
+    keysPressed = [(Boost,      boostState p /= NotBoosting),        -- this list says which movement keys the player is currently pressing
+                   (SteerLeft,  leftPressed p), 
+                   (SteerRight, rightPressed p)]
 
-checkMovementKeyPressed :: (Direction, Bool) -> Player -> Player
-checkMovementKeyPressed (Forward, True) p = boost p
-checkMovementKeyPressed (Forward, False) p@(Player { boostState = BoostFrame _ _ }) = p { boostState = NotBoosting }
-checkMovementKeyPressed (DataTypes.Left, True) p = steer p inputSteerPlayer 
-checkMovementKeyPressed (DataTypes.Right, True) p = steer p (- inputSteerPlayer)
+checkMovementKeyPressed :: (MovementKeys, Bool) -> Player -> Player -- call the appropriate functions to boost or steer if the player wants to
+checkMovementKeyPressed (Boost,      True) p = boost p
+checkMovementKeyPressed (SteerLeft,  True) p = steer p inputSteerPlayer 
+checkMovementKeyPressed (SteerRight, True) p = steer p (- inputSteerPlayer)
 checkMovementKeyPressed _ gstate = gstate

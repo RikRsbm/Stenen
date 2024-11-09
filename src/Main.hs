@@ -10,19 +10,26 @@ import HandleStep
 
 
 
+
 main :: IO ()
-main = do ufoPic <- loadBMP "Pictures/Ufo.bmp"
-          let ufoPic' = scale ufoScale ufoScale ufoPic
-          ufoAnimPics <- mapM loadBMP ["Pictures/explosieufo1.bmp", "Pictures/explosieufo2.bmp", "Pictures/explosieufo3.bmp", "Pictures/explosieufo4.bmp", "Pictures/explosieufo5.bmp"]
-          let ufoAnimPics' = map (scale ufoScale ufoScale) ufoAnimPics
-          steenAnimPics <- mapM loadBMP ["Pictures/implosieframe1.bmp", "Pictures/implosieframe2.bmp", "Pictures/implosieframe3.bmp","Pictures/implosieframe4.bmp","Pictures/implosieframe5.bmp"]
-          boostAnimPics <- mapM loadBMP ["Pictures/flame1.bmp", "Pictures/flame2.bmp", "Pictures/flame3.bmp"]
+main = do -- import all images
+          alienPic <- loadBMP "Pictures/Ufo.bmp"
+          alienAnimPics <- loadPics ["explosieufo1.bmp", "explosieufo2.bmp", "explosieufo3.bmp", "explosieufo4.bmp", "explosieufo5.bmp"]     
+          steenAnimPics <- loadPics ["implosieframe1.bmp", "implosieframe2.bmp", "implosieframe3.bmp","implosieframe4.bmp","implosieframe5.bmp"]
+          boostAnimPics <- loadPics ["flame1.bmp", "flame2.bmp", "flame3.bmp"]      
+
+          --  scale the images that have a fixed size to their correct size (the size of the steenAnimPics is not fixed)
+          let alienPic' = scale alienPicsScale alienPicsScale alienPic
+          let alienAnimPics' = map (scale alienPicsScale alienPicsScale) alienAnimPics
           let boostAnimPics' = map (scale boostPicsScale boostPicsScale) boostAnimPics
+
+          -- then call the playIO function
           playIO (InWindow "Stenen" (screenWidth, screenHeight) (0, 0)) 
                   black                                                           -- Background color
-                  144                                                             -- Frames per second, keep above bigUpdatesPerSec (= 60). Otherwise the true amount of bigUpdatesPerSec will become smaller than 60, making the game feel slower 
-                  (Menu ufoPic' steenAnimPics ufoAnimPics' boostAnimPics')        -- Initial state
+                  144                                                             -- Frames per second (independent of tick rate, as long as fps is kept above tick rate)
+                  (Menu alienPic' steenAnimPics alienAnimPics' boostAnimPics')    -- Initial state (the menu)
                   view                                                            -- View function
-                  input                                                           -- Event function
-                  step                                                            -- Step function
-  where ufoScale = 2 * alienRadius / ufoBmpSize
+                  input                                                           -- Input event function
+                  step                                                            -- Step function (gets called every frame)
+  
+  where loadPics = mapM $ loadBMP . (picturesFolder ++)

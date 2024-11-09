@@ -9,43 +9,48 @@ import System.Random
 
 
 
+-- this module contains all data types and some basic values for some of those types
+
+
+
+
 data GameState = GameState { 
-                   player :: Player
-                 , player2 :: Maybe Player 
+                   player :: Player -- player 1
+                 , player2 :: Maybe Player -- player 2 ('Nothing' in case of singleplayer)
                  , stenen :: [Steen] -- list of onscreen asteroids
                  , bullets :: [Bullet] -- list of onscreen bullets
                  , aliens :: [Alien] -- list of onscreen aliens
-                 , alienBullets :: [Bullet] -- list of onscreen bullets from the alien
+                 , alienBullets :: [Bullet] -- list of onscreen bullets from the aliens
                  , status :: GameStatus -- status of game
                  , score :: Int -- current score
                  , highscore :: Int -- all time highscore (gets loaded in at start of game)
-                 , elapsedTime :: Float
-                 , gen :: StdGen
-                 , ufoPic :: Picture
-                 , steenAnimPics :: [Picture]
-                 , ufoAnimPics :: [Picture]
-                 , boostAnimPics :: [Picture]
+                 , elapsedTime :: Float -- to keep track of time (so that we know when to do a game tick)
+                 , gen :: StdGen -- to create random numbers (gets updated after every use)
+                 , alienPic :: Picture -- alien picture
+                 , steenAnimPics :: [Picture] -- pictures for steen implosion animation
+                 , alienAnimPics :: [Picture] -- pictures for alien implosion animation
+                 , boostAnimPics :: [Picture] -- pictures for boost animation
                  }
                  | 
                  Menu {             
-                   ufoPic :: Picture
-                 , steenAnimPics :: [Picture]
-                 , ufoAnimPics :: [Picture]
-                 , boostAnimPics :: [Picture]
+                   alienPic :: Picture -- see above
+                 , steenAnimPics :: [Picture] -- see above
+                 , alienAnimPics :: [Picture] -- see above
+                 , boostAnimPics :: [Picture] -- see above
                  }
 
-initialState :: Picture -> [Picture] -> [Picture] -> [Picture] -> GameState
-initialState = GameState initialPlayer1
-                         Nothing
-                         []
-                         []
-                         []
-                         []
-                         FirstStep
-                         0
-                         0
-                         0
-                         (mkStdGen 0) -- will be changed to a random seed in the first step
+initialSingleplayerState :: Picture -> [Picture] -> [Picture] -> [Picture] -> GameState -- initial state for singleplayer
+initialSingleplayerState = GameState initialPlayer1
+                                     Nothing
+                                     []
+                                     []
+                                     []
+                                     []
+                                     FirstStep
+                                     0
+                                     0
+                                     0
+                                     (mkStdGen 0) -- will be changed to a random seed (by using IO) in the first step
 
 
 
@@ -54,42 +59,41 @@ initialState = GameState initialPlayer1
 data Player = Player { 
                 pLocation :: Point -- location of player
               , pVelocity :: Vector -- velocity of player
-              , lookDirection :: Vector -- direction that player is looking in, it's a vector of constant magnitude 1. That way we don't have to normalize it if we want to use it
-              , boostState :: BoostState -- is the player boosting? if so, which boost frame, and how long has it been shown?
-              , pColor :: Color
-              , forwardPressed :: Bool
-              , leftPressed :: Bool
-              , rightPressed :: Bool
+              , lookDirection :: Vector -- direction that player is looking in
+              , boostState :: BoostState -- boost state of player
+              , pColor :: Color -- color of player and his bullets
+              , leftPressed :: Bool -- does the player press the button that is bound to 'steer left'?
+              , rightPressed :: Bool -- does the player press the button that is bound to 'steer right'?
               } 
               deriving Eq
 
-initialPlayer1 :: Player
-initialPlayer1 = Player (0, 0) 
+initialPlayer1 :: Player -- initial state for player 1
+initialPlayer1 = Player 
                  (0, 0) 
-                 (0, 1)
+                 (0, 0) 
+                 (0, 1) -- lookDirection is a vector of constant magnitude 1. That way we don't have to normalize it every time we want to use it
                  NotBoosting
                  player1Color
                  False
                  False
-                 False
 
-initialPlayer2 :: Player
+initialPlayer2 :: Player -- initial state for player 2
 initialPlayer2 = initialPlayer1 { pColor = player2Color, pLocation = (0, -50) }
 
 
 
 
-data Steen = Steen { 
+data Steen = Steen { -- steen is our word for asteroid (since our game is called stenen)
                sLocation :: Point -- location of asteroid
              , sVelocity :: Vector -- velocity of asteroid
              , sRadius :: Float -- radius of asteroid
-             , sState :: DieState -- state of the animation
+             , sState :: DieState -- state of the implosion animation
              } 
 
 data Alien = Alien {
                aLocation :: Point -- location of alien
              , aVelocity :: Vector -- velocity of alien
-             , aState :: DieState -- state of the animation
+             , aState :: DieState -- state of the implosion animation
              }
 
 data Bullet = Bullet {
@@ -110,39 +114,38 @@ data GameStatus = FirstStep -- the first step of the game, it then reads the hig
                 | GameOver -- when the game is over
                 deriving Eq
 
-data DieState = Alive 
-           | Dying ZeroToFour Float -- which frame, how many seconds has it been at this frame
-           | Dead
-           deriving (Show, Eq)
+data DieState = Alive -- object is not (yet) shot down
+              | Dying ZeroToFour Float -- which implosion animation frame, how many seconds has it been at this frame
+              | Dead -- implosion animation has finished
+              deriving (Show, Eq)
 
-data BoostState = NotBoosting
-                | BoostFrame ZeroToTwo Float -- which frame, how many seconds it has been at this frame
+data BoostState = NotBoosting -- player is not pressing the key bound to boosting
+                | BoostFrame ZeroToTwo Float -- player is pressing the key bound to boosting. Which boost animation frame 
+                                             -- is currently being displayed, how many seconds has it been at this frame
                 deriving (Show, Eq)
 
-data ZeroToFour = Zero4 | One4 | Two4 | Three4 | Four4
+data ZeroToFour = Zero4 | One4 | Two4 | Three4 | Four4 -- datatype for the integers 0, 1, 2, 3 and 4
                   deriving (Show, Eq, Enum, Bounded)
 
-data ZeroToTwo = Zero2 | One2 | Two2
+data ZeroToTwo = Zero2 | One2 | Two2 -- datatype for the integers 0, 1 and 2
                  deriving (Show, Eq, Enum, Bounded)
 
-data BulletType = FromPlayer | FromAlien deriving (Show, Eq)
+data MovementKeys = Boost | SteerLeft | SteerRight -- datatype for the three movement keys
 
-data Direction = Forward | Left | Right
-
-data Mode = Singleplayer | Multiplayer
+data Mode = Singleplayer | Multiplayer -- singleplayer vs multiplayer, used in the pattern matching for viewInstructions
 
 
 
 
 data Button = Button {
-                butLocation :: Point
-              , butSize :: Point
-              , butText :: String
+                butLocation :: Point -- location of button
+              , butSize :: Point -- size of button
+              , butText :: String -- text displayed within button
               }
               deriving Eq
 
-singleButton :: Button
+singleButton :: Button -- button that starts a singleplayer game
 singleButton = Button (0, 100) buttonSize "Singleplayer"
 
-multiButton :: Button
+multiButton :: Button -- button that starts a multiplayer game
 multiButton = Button (0, -100) buttonSize "Multiplayer"

@@ -10,23 +10,27 @@ import Constants
 
 
 
-class HasImplosionAnimation a where
-    dieState :: a -> DieState
-    replaceState :: a -> DieState -> a
+-- this class generalizes the objects that have an implosion animation
 
-    updateImplosionAnim :: Float -> a -> a
+
+
+class HasImplosionAnimation a where
+    dieState :: a -> DieState -- state of the object (alive, dying, or dead)
+    replaceState :: a -> DieState -> a -- replaces the state of the object by the provided state
+
+    updateImplosionAnim :: Float -> a -> a -- updates the implosion animation if enough time has passed
     updateImplosionAnim secs a =
         case dieState a of
-            Dying frame time
-                | time + secs > timePerImplosionFrame ->
+            Dying frame time -- if it was already dying
+                | time + secs > timePerImplosionFrame -> -- if it's time for a new implosion frame, update the animation
                     replaceState a $ case frame of
-                        x | x == maxBound -> Dead
-                        other -> Dying (succ other) (time + secs - timePerImplosionFrame)
+                        x | x == maxBound -> Dead -- if it was at the last frame, the object is now officially dead
+                        other             -> Dying (succ other) (time + secs - timePerImplosionFrame) -- otherwise, choose the next frame
                 | otherwise ->
                     replaceState a (Dying frame (time + secs))
-            Alive ->
+            Alive -> -- if it was alive, set the animation to the first frame
                 replaceState a (Dying minBound 0) 
-            -- case for dead isnt needed since dead ones get filtered out immediately after becoming dead
+            -- case for Dead isnt needed, since dead ones get filtered out immediately after becoming dead
 
 
 instance HasImplosionAnimation Steen where

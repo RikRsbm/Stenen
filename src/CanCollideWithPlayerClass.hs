@@ -15,6 +15,7 @@ import General
 -- this type class generalizes objects that can collide with the player
 
 
+
 class Movable m => CanCollideWithPlayer m where
     pColliding :: Player -> m -> Bool -- are player and 'm' currently colliding?
     pColliding p m = pointsWithinDistance (location p) (location m) (radius m + playerRadius / 2)
