@@ -32,7 +32,7 @@ steenMaxSpeed :: Float -- maximum possible speed of steen
 steenMaxSpeed = 3
 
 playerBulletSpeed :: Float -- speed of player bullet (relative to player velocity, so actual speed of bullet may vary) 
-playerBulletSpeed = 8
+playerBulletSpeed = 7
 
 alienBulletSpeed :: Float -- speed of alien bullet (relative to the point it was shot from, NOT relative to alien velocity)
 alienBulletSpeed = 4
