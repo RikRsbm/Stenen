@@ -26,13 +26,13 @@ alienSpeed :: Float -- speed of alien
 alienSpeed = 2
 
 steenMinSpeed :: Float -- minimum possible speed of steen
-steenMinSpeed = 1
+steenMinSpeed = 0.5
 
 steenMaxSpeed :: Float -- maximum possible speed of steen
-steenMaxSpeed = 2
+steenMaxSpeed = 3
 
 playerBulletSpeed :: Float -- speed of player bullet (relative to player velocity, so actual speed of bullet may vary) 
-playerBulletSpeed = 6
+playerBulletSpeed = 8
 
 alienBulletSpeed :: Float -- speed of alien bullet (relative to the point it was shot from, NOT relative to alien velocity)
 alienBulletSpeed = 4
@@ -80,10 +80,10 @@ playerBackLineRatio = 0.5
 -- randomisation, per game tick there is a 1 in (odds) chance of the event happening
 
 steenCreationOdds :: Int
-steenCreationOdds = 100
+steenCreationOdds = 65
 
 alienCreationOdds :: Int
-alienCreationOdds = 400
+alienCreationOdds = 350
 
 alienShootsOdds :: Int
 alienShootsOdds = 150

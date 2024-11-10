@@ -23,7 +23,7 @@ instance CanShoot Player where
     shootBullet p _ = Bullet loc vec (pColor p) -- an object of type b is not needed, since the player doesn't shoot *at* something, but rather in a direction
       where 
         loc = location p `addVec` (playerRadius `mulSV` lookDirection p) -- starting position of bullet. this line makes sure the bullet starts at the front end of the player
-        vec = (playerBulletSpeed `mulSV` lookDirection p) `addVec` velocity p -- velocity of the bullet
+        vec = (playerBulletSpeed `mulSV` lookDirection p) `addVec` velocity p -- velocity of the bullet (it gets the player's velocity on top of the standard bullet speed)
 
 instance CanShoot Alien where
     shootBullet :: Movable b => Alien -> b -> Bullet -- alien shoots bullet at player
