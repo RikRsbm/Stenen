@@ -14,28 +14,28 @@ import Graphics.Gloss
 
 
 
--- speeds, all speeds are in pixels/sec
+-- speeds, all speeds are in pixels/game tick
 
 autoDecelPlayer :: Float -- amount of automatic decrease of player speed per game tick 
-autoDecelPlayer = 2.5
+autoDecelPlayer = 0.04
 
 inputAccelPlayer :: Float -- amount of added speed with 'w' press per game tick
-inputAccelPlayer = 9
+inputAccelPlayer = 0.15
 
 alienSpeed :: Float -- speed of alien
-alienSpeed = 120
+alienSpeed = 2
 
-steenMinSpeed :: Int -- minimum possible speed of steen
-steenMinSpeed = 60
+steenMinSpeed :: Float -- minimum possible speed of steen
+steenMinSpeed = 1
 
-steenMaxSpeed :: Int -- maximum possible speed of steen
-steenMaxSpeed = 120
+steenMaxSpeed :: Float -- maximum possible speed of steen
+steenMaxSpeed = 2
 
 playerBulletSpeed :: Float -- speed of player bullet (relative to player velocity, so actual speed of bullet may vary) 
-playerBulletSpeed = 360
+playerBulletSpeed = 6
 
 alienBulletSpeed :: Float -- speed of alien bullet (relative to the point it was shot from, NOT relative to alien velocity)
-alienBulletSpeed = 240
+alienBulletSpeed = 4
 
 
 
@@ -170,11 +170,11 @@ instructionX = -450
 
 -- animations
 
-timePerImplosionFrame :: Float -- time that each implosion frame takes
-timePerImplosionFrame = 0.1
+ticksPerImplosionFrame :: Float -- amount of ticks that each implosion frame takes
+ticksPerImplosionFrame = 6
 
-timePerBoostFrame :: Float -- time that each boost frame takes
-timePerBoostFrame = 0.05
+ticksPerBoostFrame :: Float -- amount of ticks that each boost frame takes
+ticksPerBoostFrame = 3
 
 boostBmpSize :: Float -- the height (short side) (in pixels) of the boost pictures in the Pictures folder
 boostBmpSize = 15

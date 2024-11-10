@@ -12,7 +12,8 @@ executable FPproject
   build-depends:       base >= 4 && < 5,
                        gloss,
                        random,
-                       containers
+                       containers,
+                       time
   hs-source-dirs:      src
   other-modules:       HandleStep
                      , HandleInput

@@ -1,10 +1,9 @@
 module General where
 
 
-import Graphics.Gloss 
-import Graphics.Gloss.Data.Vector 
+import Graphics.Gloss
+import Graphics.Gloss.Data.Vector
 import DataTypes
-
 
 
 
@@ -17,9 +16,9 @@ import DataTypes
 withinButtonBounds :: Point -> Button -> Bool -- is the point within the bounds of the button?
 withinButtonBounds (x,y) but = x > x' - halfW && x < x' + halfW
                             && y > y' - halfH && y < y' + halfH
-  where 
+  where
     (x', y') = butLocation but
-    (halfW, halfH) = 0.5 `mulSV` butSize but 
+    (halfW, halfH) = 0.5 `mulSV` butSize but
 
 
 

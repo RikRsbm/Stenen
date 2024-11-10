@@ -13,6 +13,7 @@ import MovableClass
 import HasAnimationClass
 import RandomObjectClass
 import Data.Foldable
+import Data.Time
 
 
 
@@ -21,30 +22,33 @@ import Data.Foldable
 
 step :: Float -> GameState -> IO GameState -- gets called every frame
 step _ menu@(Menu {}) -- if the menu is open, do nothing
-    = return menu 
+    = return menu
 step secs gstate      -- if the actual game is open: 
     | status gstate == FirstStep -- if this is the first step of the game
-        = do r <- newStdGen -- create random generator
-             firstStep gstate r
+        = do gen' <- newStdGen -- create random generator
+             firstStep gstate gen'
     | status gstate == Running && aPlayerHitsSomething gstate -- if a player hits something (alien, steen or bullet)
         = finishGame gstate
-    | otherwise 
+    | otherwise
         = return $ pureStep secs gstate
 
 
 firstStep :: GameState -> StdGen -> IO GameState -- this function reads the highscore, and sets the gen of the gamestate to the provided gen (to create random numbers)
-firstStep gstate r
+firstStep gstate gen'
     = do text <- readFile highscorePath
          let scores = lines text
          return $ gstate { status = PreStart,
-                           gen = r,
-                           highscore = maybe 0 read (maybeLast scores) }
-  where maybeLast = foldl' (\_ x -> Just x) Nothing -- last line of the file
+                           gen = gen',
+                           highscore = fromMaybe 0 (listToMaybe (reverse scores)  >>= -- gets the last line 
+                                                    listToMaybe . reverse . words >>= -- gets the last word
+                                                    readMaybe) }
+                                                    
 
 finishGame :: GameState -> IO GameState -- this function stops the game and writes the score (if it is higher than the highscore) to the highscore file
 finishGame gstate
     = do when (score gstate > highscore gstate)
-             $ appendFile highscorePath (show (score gstate) ++ "\n")
+             $ do dateTime <- formatTime defaultTimeLocale "%Y-%m-%d,UTC:%H:%M:%S" <$> getCurrentTime
+                  appendFile highscorePath (dateTime ++ ": " ++ show (score gstate) ++ "\n")
          return $ gstate { status = GameOver}
 
 
@@ -63,8 +67,8 @@ updateEveryFrame :: Float -> GameState -> GameState -- gets called every frame
 updateEveryFrame secs gstate
     = gstate
         {
-          player = updatePlayer (player gstate)                   
-        , player2 = updatePlayer <$> player2 gstate              
+          player = updatePlayer (player gstate)
+        , player2 = updatePlayer <$> player2 gstate
         , stenen = updateLocations secs remainingStenen              -- updates the locations of the stenen
         , bullets = updateLocations secs (bullets gstate)            -- updates the locations of the player bullets
         , aliens = updateLocations secs remainingAliens              -- updates the locations of the aliens
@@ -80,9 +84,9 @@ updateEveryTick :: GameState -> GameState -- gets called every game tick
 updateEveryTick gstate
     =  gstate
          {
-           player = updatePlayer (player gstate)                           
-         , player2 = updatePlayer <$> player2 gstate                        
-         , stenen = addMaybe perhapsNewSteen (stenen gstate)                   
+           player = updatePlayer (player gstate)
+         , player2 = updatePlayer <$> player2 gstate
+         , stenen = addMaybe perhapsNewSteen (stenen gstate)
          , aliens = addMaybe perhapsNewAlien (aliens gstate)
          , alienBullets = addMaybe perhapsNewAlienBullet (alienBullets gstate)
          , gen = newGen -- update the gen so that we keep producing pseudorandom values

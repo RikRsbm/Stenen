@@ -43,7 +43,7 @@ instance RandomObject Steen where
                   2 -> (- halfWidthFloat - r, fromIntegral randomY) -- left side
                   _ -> (  halfWidthFloat + r, fromIntegral randomY) -- right side
 
-        (dx, dy) = fromIntegral speed `mulSV` normalizeV (a - x, b - y) -- velocity of steen
+        (dx, dy) = speed `mulSV` normalizeV (a - x, b - y) -- velocity of steen
         (a, b) = location targetP 
         r = fromIntegral radius
 

@@ -108,7 +108,7 @@ data Bullet = Bullet {
 
 
 data GameStatus = FirstStep -- the first step of the game, it then reads the highscore from highscore.txt
-                | PreStart -- between FirstStep and the first 'w' press
+                | PreStart -- between FirstStep and the actual start of the game
                 | Running -- while the game is running
                 | Paused -- while the game is paused
                 | GameOver -- when the game is over

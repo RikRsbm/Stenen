@@ -19,11 +19,11 @@ import Constants
 class Movable a where 
     radius :: a -> Float 
     location :: a -> Point
-    velocity :: a -> Vector -- velocity of object, in pixels/sec
+    velocity :: a -> Vector -- velocity of object, in pixels/game tick
     replaceLocation :: a -> Point -> a -- replaces the location of the object by the provided location
 
     updateLocation :: Float -> a -> a -- updates the location to where the object should be at this point in time
-    updateLocation secs a = replaceLocation a (x + dx * secs, y + dy * secs)
+    updateLocation secs a = replaceLocation a (x + dx * gameTicksPerSec * secs, y + dy * gameTicksPerSec * secs)
       where
         (x, y) = location a
         (dx, dy) = velocity a

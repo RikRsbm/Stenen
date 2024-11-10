@@ -18,7 +18,7 @@ class HasImplosionAnimation a where
     dieState :: a -> DieState -- state of the object (alive, dying, or dead)
     replaceState :: a -> DieState -> a -- replaces the state of the object by the provided state
 
-    updateImplosionAnim :: Float -> a -> a -- updates the implosion animation if enough time has passed
+    updateImplosionAnim :: Float -> a -> a -- updates the implosion animation if enough ticks have passed
     updateImplosionAnim secs a =
         case dieState a of
             Dying frame time -- if it was already dying
@@ -31,6 +31,8 @@ class HasImplosionAnimation a where
             Alive -> -- if it was alive, set the animation to the first frame
                 replaceState a (Dying minBound 0) 
             -- case for Dead isnt needed, since dead ones get filtered out immediately after becoming dead
+      where
+        timePerImplosionFrame = ticksPerImplosionFrame / gameTicksPerSec
 
 
 instance HasImplosionAnimation Steen where
