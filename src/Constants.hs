@@ -83,10 +83,10 @@ steenCreationOdds :: Int
 steenCreationOdds = 65
 
 alienCreationOdds :: Int
-alienCreationOdds = 350
+alienCreationOdds = 300
 
 alienShootsOdds :: Int
-alienShootsOdds = 150
+alienShootsOdds = 120
 
 
 
