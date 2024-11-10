@@ -4,9 +4,14 @@ module MovableClass where
 
 
 
-import Graphics.Gloss
+import Graphics.Gloss ( Point, Vector )
 import DataTypes
+    ( Bullet(bLocation, bVelocity),
+      Alien(aLocation, aVelocity),
+      Steen(sLocation, sRadius, sVelocity),
+      Player(pLocation, pVelocity) )
 import Constants
+    ( alienRadius, playerRadius, bulletRadius, gameTicksPerSec )
 
 
     

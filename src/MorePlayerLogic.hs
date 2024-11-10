@@ -3,14 +3,28 @@ module MorePlayerLogic where
 
 
 import DataTypes
-import General 
+    ( MovementKeys(..),
+      BoostState(NotBoosting),
+      DieState(Alive),
+      Player(Player, rightPressed, lookDirection, pLocation, pVelocity,
+             boostState, leftPressed),
+      GameState(player, bullets, score, stenen, aliens, alienBullets,
+                player2) )
+import General ( addVec, subVec ) 
 import Constants
+    ( autoDecelPlayer,
+      inputAccelPlayer,
+      inputSteerPlayer,
+      screenWidth,
+      screenHeight )
 import Graphics.Gloss.Data.Vector
-import System.Random 
-import MovableClass
-import CanCollideWithPlayerClass
-import CanShootClass
+    ( mulSV, normalizeV, magV, rotateV )
+import System.Random ( StdGen, Random(randomR) ) 
+import MovableClass ( Movable(radius) )
+import CanCollideWithPlayerClass ( CanCollideWithPlayer(..) )
+import CanShootClass ( CanShoot(shootBullet) )
 import HasImplosionAnimationClass
+    ( HasImplosionAnimation(dieState) )
 
 
 

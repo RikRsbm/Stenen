@@ -4,8 +4,14 @@ module HasAnimationClass where
 
 
 import DataTypes
-import Constants
+    ( ZeroToTwo(Zero2, Two2),
+      BoostState(BoostFrame),
+      Alien,
+      Steen,
+      Player(Player, boostState) )
+import Constants ( ticksPerBoostFrame, gameTicksPerSec )
 import HasImplosionAnimationClass
+    ( HasImplosionAnimation(updateImplosionAnim) )
 
 
 

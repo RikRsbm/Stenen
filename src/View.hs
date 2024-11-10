@@ -2,11 +2,25 @@ module View where
 
 
 
-import ViewableClass
+import ViewableClass ( Viewable(..) )
 import DataTypes
+    ( Mode(..),
+      GameStatus(GameOver, PreStart, Paused),
+      GameState(Menu, GameState, status, player, player2, stenen, aliens,
+                bullets, alienBullets, score, highscore),
+      singleButton,
+      multiButton )
 import Graphics.Gloss
+    ( Picture(Blank), translate, scale, color, text, pictures )
 import Constants
-import General  
+    ( textColor,
+      player1Color,
+      player2Color,
+      bigTextScale,
+      smallTextScale,
+      statusY,
+      instructionX )
+import General ( viewText )  
 
 
 

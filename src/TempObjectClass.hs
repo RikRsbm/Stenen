@@ -3,9 +3,9 @@ module TempObjectClass where
 
 
 
-import DataTypes
-import Constants
-import MovableClass
+import DataTypes ( Bullet, Alien, Steen )
+import Constants ( screenWidth, screenHeight )
+import MovableClass ( Movable(location, updateLocation, radius) )
 
 
 

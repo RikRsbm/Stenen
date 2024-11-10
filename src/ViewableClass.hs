@@ -4,11 +4,37 @@ module ViewableClass where
 
 
 import DataTypes
+    ( Button(butSize, butText, butLocation),
+      BoostState(BoostFrame),
+      DieState(Dying),
+      Bullet(bColor),
+      Alien(Alien, aState),
+      Steen(Steen, sState),
+      Player(Player, lookDirection, pColor, boostState),
+      GameState(alienAnimPics, alienPic, steenAnimPics, boostAnimPics) )
 import Graphics.Gloss
-import MovableClass
-import Graphics.Gloss.Data.Vector
+    ( Point,
+      Picture(Blank),
+      translate,
+      scale,
+      color,
+      circle,
+      line,
+      pictures,
+      rectangleWire,
+      rotate )
+import MovableClass ( Movable(location, radius) )
+import Graphics.Gloss.Data.Vector ( rotateV )
 import Constants
-import General
+    ( playerRadius,
+      bulletRadius,
+      playerBackLineRatio,
+      textColor,
+      steenColor,
+      bigTextScale,
+      steenImplosionBmpSize,
+      boostPicsScale )
+import General ( viewText )
 
 
 

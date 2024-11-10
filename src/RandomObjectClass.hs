@@ -4,14 +4,30 @@ module RandomObjectClass where
 
 
 
-import TempObjectClass
+import TempObjectClass ( TempObject )
 import DataTypes
-import System.Random
+    ( DieState(Alive),
+      Bullet,
+      Alien(Alien, aState),
+      Steen(Steen),
+      GameState(aliens) )
+import System.Random ( StdGen, Random(randomR) )
 import Constants
-import Graphics.Gloss.Data.Vector
-import MovableClass
-import CanShootClass
-import MorePlayerLogic
+    ( alienSpeed,
+      steenMinSpeed,
+      steenMaxSpeed,
+      steenMinRadius,
+      steenMaxRadius,
+      alienRadius,
+      steenCreationOdds,
+      alienCreationOdds,
+      alienShootsOdds,
+      screenWidth,
+      screenHeight )
+import Graphics.Gloss.Data.Vector ( mulSV, normalizeV )
+import MovableClass ( Movable(location) )
+import CanShootClass ( CanShoot(shootBullet) )
+import MorePlayerLogic ( pickPlayer )
 
 
 

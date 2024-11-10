@@ -4,12 +4,12 @@ module CanGetHitByPlayerBulletClass where
 
 
 
-import HasAnimationClass
 import DataTypes
-import Graphics.Gloss.Data.Vector
-import MovableClass
-import General
+    ( DieState(Dead, Alive), Bullet, Alien, Steen, GameState(bullets) )
+import MovableClass ( Movable(radius, location) )
+import General ( pointsWithinDistance )
 import HasImplosionAnimationClass
+    ( HasImplosionAnimation(updateImplosionAnim, dieState) )
 
 
 

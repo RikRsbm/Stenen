@@ -4,8 +4,8 @@ module HasImplosionAnimationClass where
 
 
 
-import DataTypes
-import Constants
+import DataTypes ( DieState(..), Alien(aState), Steen(sState) )
+import Constants ( ticksPerImplosionFrame, gameTicksPerSec )
 
 
 

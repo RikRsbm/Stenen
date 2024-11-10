@@ -3,11 +3,13 @@ module CanShootClass where
 
 
 
-import MovableClass
+import MovableClass ( Movable(radius, velocity, location) )
 import DataTypes
+    ( Bullet(Bullet), Alien, Player(pColor, lookDirection) )
 import Constants
-import General
-import Graphics.Gloss.Data.Vector
+    ( playerBulletSpeed, alienBulletSpeed, playerRadius, alienColor )
+import General ( addVec, subVec )
+import Graphics.Gloss.Data.Vector ( mulSV, normalizeV )
 
 
 

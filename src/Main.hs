@@ -1,12 +1,18 @@
 module Main where
 
-import Constants 
-import DataTypes 
-import View
+import Constants
+    ( alienPicsScale,
+      boostPicsScale,
+      screenWidth,
+      screenHeight,
+      picturesFolder ) 
+import DataTypes ( GameState(Menu) ) 
+import View ( view )
 import Graphics.Gloss.Interface.IO.Game
-import Graphics.Gloss
-import HandleInput
-import HandleStep
+    ( scale, black, Display(InWindow), playIO )
+import Graphics.Gloss ( scale, black, loadBMP, Display(InWindow) )
+import HandleInput ( input )
+import HandleStep ( step )
 
 
 

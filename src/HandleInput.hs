@@ -6,10 +6,25 @@ module HandleInput where
 
 
 import DataTypes
+    ( ZeroToTwo(Zero2),
+      BoostState(NotBoosting, BoostFrame),
+      GameStatus(Paused, GameOver, PreStart, Running),
+      Player(rightPressed, boostState, leftPressed),
+      GameState(Menu, GameState, player2, alienPic, steenAnimPics,
+                alienAnimPics, boostAnimPics, status, player),
+      initialSingleplayerState,
+      initialPlayer2,
+      singleButton,
+      multiButton )
 import Graphics.Gloss.Interface.IO.Game
-import Data.List
-import General
-import MorePlayerLogic
+    ( Key(Char, MouseButton, SpecialKey),
+      KeyState(Up, Down),
+      MouseButton(LeftButton),
+      SpecialKey(KeyRight, KeyEnter, KeyEsc, KeySpace, KeyUp, KeyLeft),
+      Event(EventKey) )
+import Data.List ( find )
+import General ( withinButtonBounds )
+import MorePlayerLogic ( playerShoots )
 
 
 

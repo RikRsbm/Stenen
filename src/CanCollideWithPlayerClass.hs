@@ -4,11 +4,10 @@ module CanCollideWithPlayerClass where
 
 
 
-import MovableClass
-import DataTypes
-import Graphics.Gloss.Data.Vector
-import Constants
-import General 
+import MovableClass ( Movable(radius, location) )
+import DataTypes ( Bullet, Alien, Steen, Player )
+import Constants ( playerRadius )
+import General ( pointsWithinDistance ) 
 
 
 

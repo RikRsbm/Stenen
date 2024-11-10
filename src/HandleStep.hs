@@ -3,17 +3,21 @@ module HandleStep where
 import DataTypes
 import MorePlayerLogic
 import Constants
-import System.Random
-import Data.Maybe
-import Control.Monad
+    ( steenScoreMultiplier,
+      alienScoreMultiplier,
+      gameTicksPerSec,
+      highscorePath )
+import System.Random ( StdGen, newStdGen )
+import Data.Maybe ( listToMaybe, fromMaybe )
+import Control.Monad ( when )
 import CanGetHitByPlayerBulletClass
+    ( CanGetHitByPlayerBullet(checkBulletHitsAndUpdateAnims) )
 import Text.Read (readMaybe)
-import TempObjectClass
-import MovableClass
-import HasAnimationClass
-import RandomObjectClass
-import Data.Foldable
-import Data.Time
+import TempObjectClass ( TempObject(updateLocations) )
+import MovableClass ( Movable(updateLocation) )
+import HasAnimationClass ( HasAnimation(updateAnim) )
+import RandomObjectClass ( RandomObject(perhapsCreateNew) )
+import Data.Time ( getCurrentTime, formatTime, defaultTimeLocale )
 
 
 

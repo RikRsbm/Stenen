@@ -2,7 +2,7 @@ module Constants where
     
 
     
-import Graphics.Gloss
+import Graphics.Gloss ( Color, orange, makeColor )
 
 
 

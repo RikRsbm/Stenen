@@ -2,8 +2,9 @@ module General where
 
 
 import Graphics.Gloss
-import Graphics.Gloss.Data.Vector
-import DataTypes
+    ( Point, Color, Picture, Vector, translate, scale, color, text )
+import Graphics.Gloss.Data.Vector ( mulSV, magV )
+import DataTypes ( Button(butSize, butLocation) )
 
 
 

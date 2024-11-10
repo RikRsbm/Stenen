@@ -2,9 +2,9 @@ module DataTypes where
 
 
 
-import Constants
-import Graphics.Gloss 
-import System.Random 
+import Constants ( player1Color, player2Color, buttonSize )
+import Graphics.Gloss ( Point, Color, Picture, Vector ) 
+import System.Random ( StdGen, mkStdGen ) 
 
 
 
