@@ -24,7 +24,7 @@ step _ menu@(Menu {}) -- if the menu is open, do nothing
     = return menu 
 step secs gstate      -- if the actual game is open: 
     | status gstate == FirstStep -- if this is the first step of the game
-        = do r <- newStdGen
+        = do r <- newStdGen -- create random generator
              firstStep gstate r
     | status gstate == Running && aPlayerHitsSomething gstate -- if a player hits something (alien, steen or bullet)
         = finishGame gstate
@@ -32,7 +32,7 @@ step secs gstate      -- if the actual game is open:
         = return $ pureStep secs gstate
 
 
-firstStep :: GameState -> StdGen -> IO GameState -- this function reads the highscore, and sets the gen of the gamestate to a random gen (to create random numbers)
+firstStep :: GameState -> StdGen -> IO GameState -- this function reads the highscore, and sets the gen of the gamestate to the provided gen (to create random numbers)
 firstStep gstate r
     = do text <- readFile highscorePath
          let scores = lines text
