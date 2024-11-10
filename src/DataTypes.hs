@@ -90,11 +90,13 @@ data Steen = Steen { -- steen is our word for asteroid (since our game is called
              , sState :: DieState -- state of the implosion animation
              } 
 
+
 data Alien = Alien {
                aLocation :: Point -- location of alien
              , aVelocity :: Vector -- velocity of alien
              , aState :: DieState -- state of the implosion animation
              }
+
 
 data Bullet = Bullet {
                 bLocation :: Point -- location of bullet
@@ -114,23 +116,29 @@ data GameStatus = FirstStep -- the first step of the game, it then reads the hig
                 | GameOver -- when the game is over
                 deriving Eq
 
+
 data DieState = Alive -- object is not (yet) shot down
               | Dying ZeroToFour Float -- which implosion animation frame, how many seconds has it been at this frame
               | Dead -- implosion animation has finished
               deriving (Show, Eq)
+
 
 data BoostState = NotBoosting -- player is not pressing the key bound to boosting
                 | BoostFrame ZeroToTwo Float -- player is pressing the key bound to boosting. Which boost animation frame 
                                              -- is currently being displayed, how many seconds has it been at this frame
                 deriving (Show, Eq)
 
+
 data ZeroToFour = Zero4 | One4 | Two4 | Three4 | Four4 -- datatype for the integers 0, 1, 2, 3 and 4
                   deriving (Show, Eq, Enum, Bounded)
+
 
 data ZeroToTwo = Zero2 | One2 | Two2 -- datatype for the integers 0, 1 and 2
                  deriving (Show, Eq, Enum, Bounded)
 
+
 data MovementKeys = Boost | SteerLeft | SteerRight -- datatype for the three movement keys
+
 
 data Mode = Singleplayer | Multiplayer -- singleplayer vs multiplayer, used in the pattern matching for viewInstructions
 

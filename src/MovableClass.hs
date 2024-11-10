@@ -33,6 +33,7 @@ class Movable a where
         (x, y) = location a
         (dx, dy) = velocity a
 
+
 instance Movable Player where
     radius :: Player -> Float
     radius p = playerRadius
@@ -45,6 +46,7 @@ instance Movable Player where
 
     replaceLocation :: Player -> Point -> Player
     replaceLocation p loc = p { pLocation = loc }
+
 
 instance Movable Steen where
     radius :: Steen -> Float
@@ -59,6 +61,7 @@ instance Movable Steen where
     replaceLocation :: Steen -> Point -> Steen
     replaceLocation s loc = s { sLocation = loc }
 
+
 instance Movable Bullet where
     radius :: Bullet -> Float
     radius b = bulletRadius
@@ -71,6 +74,7 @@ instance Movable Bullet where
 
     replaceLocation :: Bullet -> Point -> Bullet
     replaceLocation b loc = b { bLocation = loc }
+
 
 instance Movable Alien where
     radius :: Alien -> Float

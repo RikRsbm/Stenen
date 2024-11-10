@@ -47,6 +47,7 @@ import General ( viewText )
 class Viewable a where
     mkPicture :: GameState -> a -> Picture -- turn the object into a picture
 
+
 instance Viewable Player where
     mkPicture :: GameState -> Player -> Picture -- draw the player in the lookDirection
     mkPicture gstate p = pictures [lineLeft, lineRight, lineBack, boostPic]
@@ -80,6 +81,7 @@ mkBoostPicture gstate p@(Player { boostState = BoostFrame i _}) (px, py) -- if t
     radToDeg rad = rad * (180 / pi)
 mkBoostPicture _ _ _ = Blank -- it the player is not boosting, don't draw anything
 
+
 instance Viewable Steen where
     mkPicture :: GameState -> Steen -> Picture
 
@@ -92,6 +94,7 @@ instance Viewable Steen where
     mkPicture _ s = translate x y (color steenColor (circle (radius s))) -- it's still alive, draw a normal steen
       where (x, y) = location s
 
+
 instance Viewable Alien where
     mkPicture :: GameState -> Alien -> Picture
 
@@ -103,11 +106,13 @@ instance Viewable Alien where
     mkPicture gstate a = translate x y (alienPic gstate) -- it's still alive, draw a normal alien
       where (x, y) = location a
 
+
 instance Viewable Bullet where
     mkPicture :: GameState -> Bullet -> Picture
     mkPicture _ b = translate x y (color (bColor b) (circle bulletRadius)) -- draw the bullet
       where 
         (x, y) = location b
+
 
 instance Viewable Button where
     mkPicture :: GameState -> Button -> Picture

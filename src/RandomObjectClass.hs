@@ -39,6 +39,7 @@ import MorePlayerLogic ( pickPlayer )
 class (TempObject a) => RandomObject a where
     perhapsCreateNew :: GameState -> StdGen -> (Maybe a, StdGen) -- might create a new object (small chance). also updates the generator  
     
+
 instance RandomObject Steen where
     perhapsCreateNew :: GameState -> StdGen -> (Maybe Steen, StdGen)
     perhapsCreateNew gstate gen 
@@ -67,6 +68,7 @@ instance RandomObject Steen where
         halfHeight = screenHeight `div` 2
         halfWidthFloat = fromIntegral halfWidth
         halfHeightFloat = fromIntegral halfHeight
+
 
 instance RandomObject Alien where 
     perhapsCreateNew :: GameState -> StdGen -> (Maybe Alien, StdGen)

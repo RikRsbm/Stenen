@@ -60,6 +60,7 @@ finishGame gstate
 
 
 
+
 pureStep :: Float -> GameState -> GameState
 pureStep secs gstate
     | status gstate /= Running -- if the game is not running, do nothing
@@ -69,6 +70,7 @@ pureStep secs gstate
              -- ^ we choose this exact elapsedTime instead of 0 so that lower framerates don't unnecessarily put elapsedTime at 0 all the time (which lowers the tick rate)
     | otherwise -- if the game is running and it's not time for a tick
         = updateEveryFrame secs (gstate { elapsedTime = elapsedTime gstate + secs })
+
 
 updateEveryFrame :: Float -> GameState -> GameState -- gets called every frame
 updateEveryFrame secs gstate
@@ -86,6 +88,7 @@ updateEveryFrame secs gstate
     (remainingStenen, nrStenenShot) = checkBulletHitsAndUpdateAnims secs gstate (stenen gstate) -- gives the number of stenen shot this frame, updates the implosion animations (if necessary), and filters out the stenen whose implosion animation has ended
     (remainingAliens, nrAliensShot) = checkBulletHitsAndUpdateAnims secs gstate (aliens gstate) -- same as for stenen
     updatePlayer = updateAnim secs . pCheckBounds . updateLocation secs                         -- updates the player location, handles collision with the walls, and updates the boost animation (if necessary)
+
 
 updateEveryTick :: GameState -> GameState -- gets called every game tick
 updateEveryTick gstate

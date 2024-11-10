@@ -1,6 +1,7 @@
 module General where
 
 
+
 import Graphics.Gloss
     ( Point, Color, Picture, Vector, translate, scale, color, text )
 import Graphics.Gloss.Data.Vector ( mulSV, magV )

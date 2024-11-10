@@ -22,6 +22,7 @@ import HasImplosionAnimationClass
 class HasAnimation a where
     updateAnim :: Float -> a -> a -- update the animation if enough ticks have passed 
 
+
 instance HasAnimation Player where
     updateAnim :: Float -> Player -> Player
     updateAnim secs p@(Player { boostState = BoostFrame x time }) -- if the player is boosting
@@ -40,6 +41,7 @@ instance HasAnimation Player where
 instance HasAnimation Steen where
     updateAnim :: Float -> Steen -> Steen
     updateAnim = updateImplosionAnim 
+
 
 instance HasAnimation Alien where
     updateAnim :: Float -> Alien -> Alien

@@ -31,11 +31,13 @@ import General ( viewText )
 view :: GameState -> IO Picture -- gets called every frame
 view gstate = return (viewPure gstate)
 
+
 viewPure :: GameState -> Picture -- pure version of 'view'
 viewPure gstate@(GameState { status = PreStart }) -- if the game has not yet started, add instructions
     = pictures [viewBasicStuff gstate, 
                 viewInstructions $ maybe Singleplayer (const Multiplayer) (player2 gstate)]
 viewPure gstate = viewBasicStuff gstate 
+
 
 viewBasicStuff :: GameState -> Picture -- turns everything that should be on the screen into one picture
 viewBasicStuff menu@(Menu {}) -- for the menu, only draw the two buttons
@@ -69,14 +71,17 @@ viewBasicStuff gstate@(GameState {}) -- for the actual game, draw all pictures f
 viewScore :: Int -> Picture -- turns the score into a picture
 viewScore s = viewText (250, 250) smallTextScale textColor ("Score: " ++ show s)
 
+
 viewHighscore :: Int -> Picture -- turns the highscore into a picture
 viewHighscore s = translate 190 210 (scale smallTextScale smallTextScale (color textColor (text ("Highscore: " ++ show s))))
+
 
 viewStatus :: GameStatus -> Picture -- turns the status into a picture
 viewStatus PreStart = viewText (-180, statusY) bigTextScale textColor "Enter to start"
 viewStatus Paused = viewText (-300, statusY) bigTextScale textColor "Paused, Esc to resume"
 viewStatus GameOver = viewText (-320, statusY) bigTextScale textColor "Game over, M for menu"
 viewStatus _ = Blank
+
 
 viewInstructions :: Mode -> Picture -- turns the instructions into a picture
 viewInstructions Singleplayer = pictures [viewText (instructionX, 200) bigTextScale textColor "^ to boost"
